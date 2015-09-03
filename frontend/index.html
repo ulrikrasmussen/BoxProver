@@ -1,10 +1,40 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>BoxProver</title>
     <meta charset="UTF-8" />
+    <title>BoxProver</title>
+    <script src="jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="ace/src-min/ace.js"></script>
+    <script type="text/javascript" charset="utf-8" src="frontend.js"></script>
+    <link rel="stylesheet" type="text/css" href="frontend.css" />
+    <link rel="stylesheet" type="text/css" href="boxproof.css" />
+    <style type="text/css">
+    </style>
   </head>
   <body>
-    
+    <form id="control" style="position:absolute; top:0; left:0; right:0; height:40px;">
+      <button type="button" id="check" title="Check proof (you can also press Ctrl+Enter)">Check</button>
+      <button type="button" id="open" title="Open proof script file">Open</button>
+      <button type="button" id="save" title="Save proof script to file">Save</button>
+      <button style="align:right" type="button" id="report" title="Report bug (send email">Report Bug</button>
+      <a href="http://twelf.org/"><img src="mediumelf.png" style="width:auto; height:40px;float:right" /></a>
+    </form>
+    <div id="main" style="position:absolute; top:42px; left:0; right:0; bottom:0;" >
+      <div id="editor"
+           style="position:absolute;top:0px;left:0;right:0;bottom:0;width:0;"></div>
+      <div id="vsplitter"
+           style="position:absolute;top:0px;left:0;right:0;bottom:0;cursor:ew-resize;"></div>
+      <div id="results"
+           style="position:absolute;top:0px;left:0;right:0;bottom:0;">
+        <div id="output"
+             style="position:absolute;top:0px;left:0;right:0;bottom:0;">
+        </div>
+        <div id="hsplitter"
+             style="position:absolute;top:0px;left:0;right:0;bottom:0;width:100%;cursor:ns-resize;"></div>
+        <div id="prooftable"
+             style="position:absolute;top:0px;left:0;right:0;bottom:0;">
+        </div>
+      </div>
+    </div>
   </body>
 </html>

@@ -1,0 +1,3 @@
+[submodule "frontend/ace"]
+	path = frontend/ace
+	url = git@github.com:ajaxorg/ace-builds.git

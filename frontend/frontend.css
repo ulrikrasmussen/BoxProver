@@ -1,0 +1,62 @@
+html {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+body {
+    overflow: hidden;
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+}
+
+#control {
+    margin:0;
+    font-size:18px;
+    background-color: #192B3E;
+    border-bottom: 2px solid #aaa;
+}
+
+#control button {
+    font-size: inherit;
+    background-color: #75808B;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius:6px;
+    color: #0C0D0E;
+    text-decoration: none;
+    cursor: pointer;
+    border:none;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+#control button:hover {
+    background-color: #C8CCD1;
+}
+
+#main {
+    background-color: white;
+}
+
+#editor {
+    font-size: inherit;
+}
+
+#vsplitter, #hsplitter {
+    background-color: #aaa;
+}
+
+#output {
+    margin-left: 8px;
+    overflow: auto;
+}
+
+#prooftable {
+    margin-left: 8px;
+    overflow: auto;
+}

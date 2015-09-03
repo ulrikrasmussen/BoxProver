@@ -1,0 +1,32 @@
+table.boxproof td {
+    white-space: nowrap;
+    height: 1.5em;
+}
+
+td.line {
+    width: 2em;
+}
+
+td.rule {
+    padding-left: 2em;
+}
+
+td.box {
+    width: 0.5em;
+}
+
+td.box.active {
+    border-left: 2px solid black;
+}
+
+td.open {
+    border-top: 2px solid black;
+}
+
+td.close {
+    border-bottom: 2px solid black;
+}
+
+table.boxproof {
+    border-collapse:collapse;
+}
