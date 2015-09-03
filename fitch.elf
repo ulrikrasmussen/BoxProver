@@ -1,0 +1,58 @@
+term : type. %name term T#.
+prop : type. %name prop Phi#.
+
+/\   : prop -> prop -> prop.
+\/   : prop -> prop -> prop.
+=>   : prop -> prop -> prop.
+~    : prop -> prop.
+==   : term -> term -> prop.
+all  : (term -> prop) -> prop.
+exi  : (term -> prop) -> prop.
+bot  : prop.
+top  : prop.
+
+%infix none 8 ==.
+%infix left 7 /\.
+%infix left 6 \/.
+%infix right 5 =>.
+%prefix 8 ~.
+
+boxtype : type. %name boxtype Box#.
+$ : prop -> boxtype. %postfix 4 $.
+tm : (term -> boxtype) -> boxtype.
+,,, : prop -> boxtype -> boxtype. %infix right 3 ,,,.
+
+proof : boxtype -> type. %name proof Alpha#.
+ref : boxtype -> type. %name ref Ref#.
+
+var : ({t:term} proof (S t)) -> proof (tm S).
+assumption; : {Phi} (ref (Phi $) -> proof S) -> proof (Phi ,,, S). %infix right 4 assumption;.
+; : proof S -> (ref S -> proof T) -> proof T. %infix right 3 ;.
+
+copy : ref (Phi $) -> proof (Phi $).
+top_i : proof (top $).
+con_i : ref (A $) -> ref (B $) -> proof (A /\ B $).
+con_e1 : ref (A /\ B $) -> proof (A $).
+con_e2 : ref (A /\ B $) -> proof (B $).
+dis_i1 : ref (A $) -> proof (A \/ B $).
+dis_i2 : ref (B $) -> proof (A \/ B $).
+dis_e : ref (A \/ B $) -> ref (A ,,, C $) -> ref (B ,,, C $) -> proof (C $).
+imp_i : ref (A ,,, B $) -> proof (A => B $).
+imp_e : ref (A $) -> ref (A => B $) -> proof (B $).
+neg_i : ref (A ,,, bot $) -> proof (~ A $).
+neg_e : ref (A $) -> ref (~ A $) -> proof (bot $).
+bot_e : ref (bot $) -> proof (A $).
+
+all_i : ref (tm [x] A x $) -> proof (all A $).
+all_e : {T:term} ref (all A $) -> proof (A T $).
+exi_i : {T:term} ref (A T $) -> proof (exi A $).
+exi_e : ref (exi A $) -> ref (tm [x] A x ,,, B $) -> proof (B $).
+eq_i : proof (T == T $).
+eq_e : {P} ref (P S $) -> ref (S == T $) -> proof (P T $).
+
+lem   : proof (A \/ ~ A $).
+
+nne : ref (~ ~ A $) -> proof (A $).
+
+%abbrev
+by : {A} proof (A $) -> proof (A $) = [_][x] x. %infix none 4 by.
