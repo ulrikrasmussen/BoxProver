@@ -95,9 +95,9 @@ renderFrags frags =
            line l (show l) "" (renderFormula phi) (renderReference rule refs)
          HoleLine l (ProofType bt) h ->
            line l (show l) "" (holeSpan $ renderBoxType bt) (holeSpan $ fromString h)
-         Box _ _ frags' ->
-           let open' = S.insert (firstLine frags') open
-               close' = S.insert (lastLine frags') close
+         Box l1 l2 frags' ->
+           let open' = S.insert l1 open
+               close' = S.insert l2 close
             in mapM_ (renderFrag (d+1) open' close') frags'
 
 renderReference :: String -> [LineRef] -> Html

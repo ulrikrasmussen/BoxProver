@@ -32,27 +32,17 @@ depth = foldr max 0 . map aux
     aux (HoleLine _ _ _) = 0
     aux (Box _ _ frags) = 1 + depth frags
 
-firstLine :: [ProofFragment] -> Int
-firstLine [] = error "Empty proof fragment list"
-firstLine (Line l _ _ _:_) = l
-firstLine (HoleLine l _ _:_) = l
-firstLine (VarIntroduction l _:_) = l
-firstLine (Box l _ _:_) = l
-
-lastLine :: [ProofFragment] -> Int
-lastLine = aux . reverse
-  where
-    aux [] = error "Empty proof fragment list"
-    aux (Line l _ _ _:_) = l
-    aux (HoleLine l _ _:_) = l
-    aux (VarIntroduction l _:_) = l
-    aux (Box _ l' _:_) = l'
-
 linearize :: OpenProofTerm -> OpenLineProof
 linearize (OpenProofTerm hyps t) =
-  OpenLineProof hyps frags
+  OpenLineProof hyps (flatten frags)
   where
     (frags, _) = evalState (linearize' t) initLinearizationState
+    flatten [] = []
+    flatten [Box _ _ frags'] = flatten frags'
+    flatten (VarIntroduction l x:frags') = VarIntroduction l x:flatten frags'
+    flatten (Line l phi "assumption" refs:frags') =
+        Line l phi "premise" refs:flatten frags'
+    flatten frags' = frags'
 
 data LinearizationState =
   LinearizationState { nextLine :: Int
