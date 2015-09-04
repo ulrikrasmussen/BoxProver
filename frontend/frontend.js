@@ -65,11 +65,15 @@
         var a = document.createElement('a');
         a.setAttribute('download', 'proof.elf');
         a.setAttribute('href', 'data:text/plain;base64,' + window.btoa(aceEditor.getValue()));
+        a.style.cssText = "visibility:hidden;";
+        document.body.appendChild(a);
         a.click();
+        setTimeout( function() { document.body.removeChild(a) }, 1 );
     }
 
     function onOpenClickHandler() {
         var fileElem = document.createElement('input');
+        fileElem.style.cssText = "visibility:hidden;";
         fileElem.setAttribute('type', 'file');
         $(fileElem).change(function(evt) {
             var f = evt.target.files[0];
@@ -81,13 +85,32 @@
             });
             reader.readAsText(f);
         });
+        document.body.appendChild(fileElem);
         fileElem.click();
+        setTimeout( function() { document.body.removeChild(fileElem); }, 1 );
     }
 
     function onCheckClickHandler() {
         checkProof();
     }
 
+    function onReportClickHandler() {
+        var m1 = "ZG9sbGVAZ";
+        var m2 = "GlrdS5kaw==";
+        var a = document.createElement('a');
+        var mailto = 'mailto:' + window.atob(m1 + m2);
+        mailto += '?subject=Bug%20report';
+        mailto += '&body=';
+        mailto +=
+          encodeURIComponent("\n\n== Proof script causing unexpected behavior: ==\n\n");
+        mailto += encodeURIComponent(aceEditor.getValue());
+        a.setAttribute('href', mailto);
+        a.style.cssText = "visibility:hidden;";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout( function() { document.body.removeChild(a) }, 1 );
+    }
+    
     function onHSplitterMouseDownHandler() {
         function hideHWindows() {
             output.hide();
@@ -123,8 +146,7 @@
               },
               timeout: 8000
             })
-            .success(function(data) {
-                var response = $.parseJSON(data);
+            .success(function(response) {
                 output.html('<pre><samp>' + response.output + '</samp></pre>');
                 prooftable.html(response.prooftable);
                 output.scrollTop(output.prop("scrollHeight"));
@@ -136,16 +158,17 @@
     }
     
     $().ready(function() {
-        main       = $("#main");
-        editor     = $("#editor");
-        vsplitter  = $("#vsplitter");
-        hsplitter  = $("#hsplitter");
-        results    = $("#results");
-        output     = $("#output");
-        prooftable = $("#prooftable");
-        checkButton = $("#check");
-        saveButton = $("#save");
-        openButton = $("#open");
+        main         = $("#main");
+        editor       = $("#editor");
+        vsplitter    = $("#vsplitter");
+        hsplitter    = $("#hsplitter");
+        results      = $("#results");
+        output       = $("#output");
+        prooftable   = $("#prooftable");
+        checkButton  = $("#check");
+        saveButton   = $("#save");
+        openButton   = $("#open");
+        reportButton = $("#report");
         
         aceEditor = ace.edit("editor");
         //        aceEditor.setTheme("ace/theme/solarized_dark");
@@ -167,5 +190,6 @@
         checkButton.click(onCheckClickHandler);
         saveButton.click(onSaveClickHandler);
         openButton.click(onOpenClickHandler);
+        reportButton.click(onReportClickHandler);
     });
 })();

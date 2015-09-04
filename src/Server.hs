@@ -86,6 +86,7 @@ checkHandler = do
   bin <- getTwelfBinPath
   fitch <- getBaseSigPath
   checkResult <- liftIO $ checkDecl bin fitch (BS.unpack proof)
+  modifyResponse $ setHeader "Content-Type" "application/json"
   case checkResult of
     Left err -> writeObj
                   [ "check" .= Bool False
