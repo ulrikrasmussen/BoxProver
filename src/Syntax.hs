@@ -102,6 +102,14 @@ data ProofTerm = VarIntro (Maybe VarName) ProofTerm
 
 data OpenProofTerm = OpenProofTerm [HypBinding] ProofTerm deriving (Eq, Ord, Show)
 
+isClosedTermTy :: ObjType -> Bool
+isClosedTermTy (TermTy (Open [] TermConst)) = True
+isClosedTermTy _ = False
+
+isClosedPropTy :: ObjType -> Bool
+isClosedPropTy (PropTy (Open [] PropConst)) = True
+isClosedPropTy _ = False
+
 class FreeVars t where
   ftv :: t -> S.Set String
 

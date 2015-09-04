@@ -2,7 +2,7 @@
 module RenderHtml where
 
 import           Data.String
-import           Data.List (intersperse, intercalate)
+import           Data.List (intersperse)
 
 import           Control.Monad
 
@@ -14,28 +14,48 @@ import qualified Data.Set as S
 import           LinearProof
 import           Syntax
 
+metaSpan :: String -> Html
+metaSpan = (H.span ! A.class_ "metasym") . fromString
+
+metaKindSpan :: String -> Html
+metaKindSpan = (H.span ! A.class_ "metakind") . fromString
+
+varSpan :: String -> Html
+varSpan = (H.span ! A.class_ "var") . fromString
+
+termIntroSpan :: String -> Html
+termIntroSpan = (H.span ! A.class_ "termIntro") . fromString
+          
+parSpan :: String -> Html
+parSpan = (H.span ! A.class_ "par") . fromString
+
+opSpan :: String -> Html
+opSpan = (H.span ! A.class_ "op") . fromString
+
+predSpan :: String -> Html
+predSpan = (H.span ! A.class_ "pred") . fromString
+
+funcSpan :: String -> Html
+funcSpan = (H.span ! A.class_ "func") . fromString
+
+contextSpan :: Html -> Html
+contextSpan = H.span ! A.class_ "context"
+
+exoticSpan :: String -> Html -> Html
+exoticSpan hint = H.span ! A.class_ "exotic" ! A.title (fromString hint)
+
+holeSpan :: Html -> Html
+holeSpan = H.span ! A.class_ "hole"
+
 render :: OpenLineProof -> Html
 render (OpenLineProof hyps frags) = do
-  renderHyps hyps
+  H.h1 $ fromString "Proof context"
+  renderProofHypotheses hyps
+  H.h1 $ fromString "Proof body"
   renderFrags frags
 
-renderHyps :: [HypBinding] -> Html
-renderHyps hyps =
-  H.table ! A.class_ "hypotheses" $ mapM_ renderHyp hyps
-  where
-    renderHyp (HypBinding mx typ) = H.tr $ do
-      H.td $ fromString $ maybe "_" id mx
-      H.td $ " : "
-      H.td $ prettyObjType typ
-
-prettyObjType :: ObjType -> Html
-prettyObjType (TermTy k) = fromString $ "term(" ++ show k ++ ")"
-prettyObjType (PropTy k) = fromString $ "prop(" ++ show k ++ ")"
-prettyObjType (RefTy (Open _ (RefType bt))) = (fromString $ "reference to ")
-                                      >> prettyBoxType bt
-prettyObjType (BoxTy (Open hyps BoxConst)) = fromString "sequent"
-prettyObjType (ProofTy (Open hyps (ProofType pt))) =
-  (fromString "proof of ") >> prettyBoxType pt
+parens :: Html -> Html
+parens h = parSpan "(" >> h >> parSpan ")"
 
 renderFrags :: [ProofFragment] -> Html
 renderFrags frags =
@@ -61,7 +81,7 @@ renderFrags frags =
               H.td ! A.class_ (fromString $ unwords ["conc", ocClass l])
                 $ concLabel
               H.td ! A.class_ (fromString $ unwords ["rule", ocClass l])
-                $ fromString refLabel
+                $ refLabel
               boxcols False True l ""
             H.tr ! A.class_ "empty" $ do
               H.td ! A.class_ "line" $ " "
@@ -70,61 +90,98 @@ renderFrags frags =
               H.td ! A.class_ (fromString $ unwords ["rule"]) $ " "
               boxcols True True l " "
       in case frag of
-         VarIntroduction l x -> line l (show l) x "" "var"
+         VarIntroduction l x -> line l (show l) x "" (renderReference "var" [])
          Line l phi rule refs ->
-           let showRef ref =
-                 case ref of
-                 LineRefSingle l' -> show l'
-                 LineRefMulti l1 l2 -> concat [show l1, "-", show l2]
-                 LineRefHole h -> concat ["(", h, ")"]
-               refLabel = rule ++ " " ++ intercalate ", " (map showRef refs)
-            in line l (show l) "" (prettyFormula phi) refLabel
+           line l (show l) "" (renderFormula phi) (renderReference rule refs)
          HoleLine l (ProofType bt) h ->
-           line l (show l) "" (prettyBoxType bt) (fromString h)
+           line l (show l) "" (holeSpan $ renderBoxType bt) (holeSpan $ fromString h)
          Box _ _ frags' ->
            let open' = S.insert (firstLine frags') open
                close' = S.insert (lastLine frags') close
             in mapM_ (renderFrag (d+1) open' close') frags'
 
-type Precedence = Int
+renderReference :: String -> [LineRef] -> Html
+renderReference rule refs = do
+  let ruleTable = (map (\(x,y) -> (x, fromString y))
+                  [ ("top_i", "⊤i"), ("con_i", "∧i"), ("con_e1", "∧e₁"), ("con_e2", "∧e₂")
+                  , ("dis_i1", "∨i₁"), ("dis_i2", "∨i₂"), ("dis_e","∨e"), ("imp_i","→i")
+                  , ("imp_e","→e"), ("neg_i","¬i"), ("neg_e","¬e"), ("bot_e","⊥e")
+                  , ("all_i","∀i"), ("all_e","∀e"), ("exi_i","∃i"), ("exi_e","∃e")
+                  , ("eq_i","=i"), ("eq_e","=e"), ("lem", "LEM"), ("nne", "¬¬e")
+                  ]) ++ [("var", termIntroSpan "variable")]
+  let renderRef r = case r of
+                    LineRefSingle l' -> fromString $ show l'
+                    LineRefMulti l1 l2 -> fromString $ concat [show l1, "-", show l2]
+                    LineRefHole h -> holeSpan $ fromString $ concat ["(",h,")"]
+  _ <- (maybe (fromString rule) id (lookup rule ruleTable))
+  _ <- fromString " "
+  sequence_ (intersperse (fromString ", ") $ map renderRef refs)
 
+renderProofHypotheses :: [HypBinding] -> Html
+renderProofHypotheses hyps =
+  H.table ! A.class_ "hypotheses" $ mapM_ renderHyp hyps
+  where
+    renderHyp (HypBinding mx typ) = H.tr $ do
+      H.td $ fromString $ maybe "_" id mx
+      H.td $ " : "
+      H.td $ renderObjType typ
+
+renderObjType :: ObjType -> Html
+renderObjType (TermTy c@(Open hyps TermConst))
+    | all (isClosedTermTy . bindTy) hyps =
+        let arity = length hyps in
+        if arity == 0 then metaKindSpan "Constant" else
+            metaKindSpan "Term" >> parens (fromString $ show arity)
+    | otherwise = exoticSpan ("This term has non-term dependencies and "
+                              ++ "is not a valid first-order object.")
+                    $ renderContextual (const (metaKindSpan "Term")) c
+renderObjType (PropTy c@(Open hyps PropConst))
+    | all (isClosedTermTy . bindTy) hyps =
+        let arity = length hyps in
+        if arity == 0 then metaKindSpan "Proposition" else
+            metaKindSpan "Predicate" >> parens (fromString $ show arity)
+    | otherwise = exoticSpan ("This proposition has non-term dependencies and "
+                             ++ "is not a valid first-order object.")
+                    $ renderContextual (const (metaKindSpan "Proposition")) c
+renderObjType (RefTy c) =
+    holeSpan $ renderContextual
+                 (\(RefType bt) -> metaKindSpan "Ref" >> parens (renderBoxType bt))
+                 c
+renderObjType (BoxTy c) =
+    holeSpan $ renderContextual (const (metaKindSpan "Sequent")) c
+renderObjType (ProofTy c) =
+    holeSpan $ flip renderContextual c $
+                 \(ProofType bt) -> metaKindSpan "Proof" >> parens (renderBoxType bt)
+
+renderContextual :: (a -> Html) -> Open a -> Html
+renderContextual f (Open [] a) = f a
+renderContextual f (Open bindings a) = do
+  metaKindSpan "Context"
+  let bindingList = intersperse (fromString ", ") $ map renderBinding bindings
+  contextSpan $ parens $ sequence_ $ bindingList
+  _ <- fromString " "
+  f a
+    where
+      renderBinding (HypBinding Nothing t) = renderObjType t
+      renderBinding (HypBinding (Just x) t) =
+          do varSpan x
+             _ <- fromString ": "
+             renderObjType t
+
+type Precedence = Int
 data Fixity = FixPrefix | FixInfix Assoc | FixPostfix
   deriving (Eq)
-
 data Assoc = AssocLeft | AssocRight | AssocNone
   deriving (Show, Eq)
-
 data Position = PosLeft | PosRight
   deriving (Show, Eq)
-
 type OpSpec = (Precedence, Fixity)
-
 type CtxHtml = (OpSpec, Html)
-
-metaSpan :: String -> Html
-metaSpan = (H.span ! A.class_ "metasym") . fromString
-
-varSpan :: String -> Html
-varSpan = (H.span ! A.class_ "var") . fromString
-
-parSpan :: String -> Html
-parSpan = (H.span ! A.class_ "par") . fromString
-
-opSpan :: String -> Html
-opSpan = (H.span ! A.class_ "op") . fromString
-
-predSpan :: String -> Html
-predSpan = (H.span ! A.class_ "pred") . fromString
-
-funcSpan :: String -> Html
-funcSpan = (H.span ! A.class_ "func") . fromString
 
 par :: OpSpec -> Position -> CtxHtml -> Html
 par (pprec, pfix) cpos ((cprec, cfix), s)
-  = htmlPar (not isUnambiguous) s
+  = if not isUnambiguous then parens s else s
   where
-    htmlPar False h = h
-    htmlPar True h = parSpan "(" >> h >> parSpan ")"
     isUnambiguous =
       (cprec > pprec) || and [cprec == pprec, cfix == pfix, posCompatible]
     posCompatible =
@@ -145,8 +202,8 @@ showPrefixOp spec op t1 =
 showConst :: Html -> CtxHtml
 showConst cnst = ((maxBound, FixPrefix), cnst)
 
-prettyFormula :: Formula -> Html
-prettyFormula phi = let (_, s) = go phi in s
+renderFormula :: Formula -> Html
+renderFormula phi = let (_, s) = go phi in s
   where
     go p =
       case p of
@@ -157,14 +214,14 @@ prettyFormula phi = let (_, s) = go phi in s
       Imp p1 p2  -> showInfixOp (1, FixInfix AssocRight) (opSpan " → ") (go p1) (go p2)
       Neg p'     -> showPrefixOp (4, FixPrefix) (opSpan "¬") (go p')
       Pred q ts  -> showConst $ predSpan q >> termsListHtml ts
-      Eq t1 t2   -> showConst $ prettyTerm t1 >> predSpan " = " >> prettyTerm t2
+      Eq t1 t2   -> showConst $ renderTerm t1 >> predSpan " = " >> renderTerm t2
       All x phi' -> showPrefixOp (2, FixPrefix)
                                  (opSpan "∀" >> varSpan x >> fromString " ") (go phi')
       Exi x phi' -> showPrefixOp (2, FixPrefix)
                                  (opSpan "∃" >> varSpan x >> fromString " ") (go phi')
 
 termsListHtml :: [Term] -> Html
-termsListHtml ts = appList (map prettyTerm ts)
+termsListHtml ts = appList (map renderTerm ts)
 
 -- Given a list [h1, ..., hn], renders nothing if n = 0 and otherwise renders
 -- the sequence enclosed in parameters and separated by commas.
@@ -173,20 +230,20 @@ appList [] = return ()
 appList hs =
   parSpan "(" >> sequence_ (intersperse (fromString ", ") hs) >> parSpan ")"
 
-prettyTerm :: Term -> Html
-prettyTerm (Var x) = varSpan x
-prettyTerm (App f ts) = funcSpan f >> termsListHtml ts
+renderTerm :: Term -> Html
+renderTerm (Var x) = varSpan x
+renderTerm (App f ts) = funcSpan f >> termsListHtml ts
 
-prettyBoxType :: BoxType -> Html
-prettyBoxType (BoxType [] (Left (x, ys))) =
+renderBoxType :: BoxType -> Html
+renderBoxType (BoxType [] (Left (x, ys))) =
   metaSpan " ⊢ " >> varSpan x >> appList (map varSpan ys)
-prettyBoxType (BoxType [] (Right phi)) = metaSpan " ⊢ " >> prettyFormula phi
-prettyBoxType (BoxType as c) =
+renderBoxType (BoxType [] (Right phi)) = metaSpan " ⊢ " >> renderFormula phi
+renderBoxType (BoxType as c) =
   sequence_ (intersperse (fromString ", ") (map aux as))
-  >> prettyBoxType (BoxType [] c)
+  >> renderBoxType (BoxType [] c)
   where
     aux (Left x) = varSpan x >> fromString " : term"
-    aux (Right phi) = prettyFormula phi
+    aux (Right phi) = renderFormula phi
 
 form1 :: Formula
 form1 = (Pred "p" [] `Conj` Pred "q" []) `Imp` (Pred "q" [] `Imp` (Neg (Neg (Pred "p" []))))

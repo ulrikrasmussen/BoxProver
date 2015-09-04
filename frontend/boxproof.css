@@ -3,6 +3,16 @@
     font-weight: 400;
 }
 
+#prooftable h1 {
+    font-family: sans-serif;
+    font-size: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+table.hypotheses td {
+    vertical-align: top;
+}
+
 table.boxproof td {
     white-space: nowrap;
     padding-top: 2px;
@@ -47,5 +57,31 @@ table.boxproof {
 }
 
 .var {
+    font-style: italic;
+}
+
+.metakind {
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+.exotic {
+    border: 2px dashed magenta;
+}
+
+.context {
+    cursor: pointer;
+}
+
+.hole {
+    background-color: #fdd;
+}
+
+.hole .hole {
+    background-color: inherit;
+}
+
+.termIntro {
+    color: #666;
     font-style: italic;
 }

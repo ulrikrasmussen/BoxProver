@@ -34,7 +34,7 @@
     <div id="main" style="position:absolute; top:45px; left:0; right:0; bottom:0;" >
       <div id="editor"
            style="position:absolute;top:0px;left:0;right:0;bottom:0;width:0;">
-%abbrev
+        %abbrev
 not_all_exi : ref (~ (all [x] P x) $) -> proof ((exi [x] ~ P x) $)
   = [l0]
      (~ (exi [x] ~ P x)         assumption; [h]
@@ -53,9 +53,9 @@ not_all_exi : ref (~ (all [x] P x) $) -> proof ((exi [x] ~ P x) $)
         all P                   by all_i allbox ; [allp]
         bot                     by neg_e allp l0
      )                          ; [botbox]
-     ~ ~ (exi [y] ~ P y)        by neg_i botbox ; [nexi]
-     HOLE1 ; [hole]
-     HOLE
+        ~ ~ (exi [y] ~ P y)        by neg_i botbox ; [nexi]
+     (_ : proof (Q (P T) $)) ; [hole]
+     _
      .
       </div>
       <div id="vsplitter"
