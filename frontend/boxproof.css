@@ -1,32 +1,51 @@
+#prooftable {
+    font-family: 'Droid Serif', sans-serif;
+    font-weight: 400;
+}
+
 table.boxproof td {
     white-space: nowrap;
-    height: 1.5em;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 td.line {
-    width: 2em;
+    width: 20px;
+    padding-right: 30px;
 }
 
 td.rule {
-    padding-left: 2em;
+    padding-lefT: 20px;
 }
 
 td.box {
-    width: 0.5em;
+    width: 10px;
 }
 
 td.box.active {
-    border-left: 2px solid black;
+    border-left: 1px solid #333;
 }
 
 td.open {
-    border-top: 2px solid black;
+    border-top: 1px solid #333;
 }
 
 td.close {
-    border-bottom: 2px solid black;
+    border-bottom: 1px solid #333;
 }
 
 table.boxproof {
     border-collapse:collapse;
+}
+
+.op {
+
+}
+
+.pred {
+    font-style: italic;
+}
+
+.var {
+    font-style: italic;
 }

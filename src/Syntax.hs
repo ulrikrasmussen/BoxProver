@@ -16,28 +16,43 @@ type Arity = Int
 
 -- | The type of a "box" is a possibly empty list of hypothetical terms and
 -- proof references followed by a conclusion.
-data BoxType = BoxType [Either VarName Formula] -- ^ Antecedent: Terms or assumptions
-                       (Either VarName Formula) -- ^ Consequent: A box-type hole or
-                                                --   a formula
+data BoxType =
+  BoxType { antecedent :: [Either VarName Formula]
+            -- If this is a partial sequent with a hole, the consequent
+            -- is an application of a hole to some list of objects from the context.
+            -- Otherwise, the consequent is a concrete formula.
+          , consequent :: (Either (VarName, [VarName]) Formula)
+          }
              deriving (Eq, Ord, Show)
 
--- | Representation of possible hypothetical objects.
-data HypType = HypTerm Arity
-             | HypProp Arity
-             | HypRef RefType
-             | HypBox
-             | HypProof ProofType
+-- | Unit types representing the unindexed type constants "box", "term" and "prop"
+data BoxConst = BoxConst deriving (Eq, Ord, Show)
+data TermConst = TermConst deriving (Eq, Ord, Show)
+data PropConst = PropConst deriving (Eq, Ord, Show)
+
+-- | Union of types of objects that may appear in a valid context.
+data ObjType = TermTy (Open TermConst)
+             | PropTy (Open PropConst)
+             | RefTy (Open RefType)
+             | BoxTy (Open BoxConst)
+             | ProofTy (Open ProofType)
              deriving (Eq, Ord, Show)
 
 -- | A binder for a hypothetical object.
-data HypBinding = HypBinding (Maybe VarName) HypType deriving (Eq, Ord, Show)
+data HypBinding = HypBinding { bindVar :: Maybe VarName
+                             , bindTy :: ObjType
+                             }
+                deriving (Eq, Ord, Show)
 
 -- | A reference type is simply a wrapped box type.
 data RefType = RefType BoxType deriving (Eq, Ord, Show)
 
 -- | The type of open proofs. This includes the box type that the proof proves, as well
 --   as a list of hypothetical objects.
-data ProofType = ProofType [HypBinding] BoxType deriving (Eq, Ord, Show)
+data ProofType = ProofType BoxType deriving (Eq, Ord, Show)
+
+-- | General type of open objects.
+data Open a = Open [HypBinding] a deriving (Eq, Ord, Show)
 
 -- | Formula data type. Represents propositions.
 data Formula = Top
@@ -143,20 +158,30 @@ instance FreeVars ProofTerm where
     NNE phi r -> S.insert r $ ftv phi
     Hole typ x -> S.insert x $ ftv typ
 
-instance FreeVars ProofType where
-  ftv (ProofType [] bt) = ftv bt
-  ftv (ProofType (HypBinding mx ht:hs) bt) =
-    S.unions [ftv' ht, maybe id S.delete mx $ ftv (ProofType hs bt)]
+instance FreeVars TermConst where ftv = const S.empty
+instance FreeVars PropConst where ftv = const S.empty
+instance FreeVars BoxConst where ftv = const S.empty
+
+instance (FreeVars a) => FreeVars (Open a) where
+  ftv (Open [] a) = ftv a
+  ftv (Open (HypBinding mx ht:hyps) a) =
+    S.unions [ftv' ht, maybe id S.delete mx $ ftv (Open hyps a)]
     where
-      ftv' (HypProof pt) = ftv pt
-      ftv' (HypRef rt) = ftv rt
-      ftv' _ = S.empty
+      ftv' (TermTy x)  = ftv x
+      ftv' (PropTy x)  = ftv x
+      ftv' (RefTy x)   = ftv x
+      ftv' (BoxTy x)   = ftv x
+      ftv' (ProofTy x) = ftv x
+
+instance FreeVars ProofType where
+  ftv (ProofType bt) = ftv bt
 
 instance FreeVars RefType where
   ftv (RefType bt) = ftv bt
 
 instance FreeVars BoxType where
-  ftv (BoxType [] conc) = either S.singleton ftv conc
+  ftv (BoxType [] conc) = either aux ftv conc
+    where aux (x, ys) = S.fromList (x:ys)
   ftv (BoxType (Left x:as) conc) = S.delete x $ ftv $ BoxType as conc
   ftv (BoxType (Right phi:as) conc) = S.unions [ftv phi, ftv $ BoxType as conc]
 
@@ -239,26 +264,41 @@ convertBoxType m =
     in BoxType (Left assmTerm:as) cf
   M [] (R (RConst "$") [pm]) ->
     BoxType [] (Right $ convertProp pm)
-  M [] (R (RVar x _) []) -> BoxType [] (Left x)
+  M [] (R (RVar x _) ys) ->
+    BoxType [] (Left (x, map convertVarName ys))
   _ -> error $ concat ["Malformed box type: ", show m]
 
-convertRefType :: A -> RefType
-convertRefType (A _ (P "ref" [bt])) = RefType (convertBoxType bt)
-convertRefType _ = error "Not a reference type"
+convertRefType :: P -> RefType
+convertRefType (P "ref" [bt]) = RefType (convertBoxType bt)
+convertRefType p = error $ "Not a ref type: " ++ show p
 
-convertProofType :: A -> ProofType
-convertProofType (A bindings (P "proof" [bt])) =
-  ProofType (map convertHypothesis bindings) (convertBoxType bt)
-convertProofType _ = error "Not a proof type"
+convertBoxConst :: P -> BoxConst
+convertBoxConst (P "boxtype" []) = BoxConst
+convertBoxConst p = error $ "Not a boxtype constant: " ++ show p
+
+convertProofType :: P -> ProofType
+convertProofType (P "proof" [bt]) = ProofType (convertBoxType bt)
+convertProofType p = error $ "Not a proof type: " ++ show p
+
+convertTermType :: P -> TermConst
+convertTermType (P "term" []) = TermConst
+convertTermType p = error $ "Not a term constant: " ++ show p
+
+convertPropType :: P -> PropConst
+convertPropType (P "prop" []) = PropConst
+convertPropType p = error $ "Not a prop constant: " ++ show p
+
+convertOpen :: (P -> a) -> A -> Open a
+convertOpen f (A bindings p) = Open (map convertHypothesis bindings) (f p)
 
 convertHypothesis :: Binding -> HypBinding
 convertHypothesis (mn, _, a@(A _ (P name _))) =
   case name of
-    "term"    -> HypBinding mn (HypTerm (termArity' a))
-    "prop"    -> HypBinding mn (HypProp (propArity a))
-    "proof"   -> HypBinding mn (HypProof (convertProofType a))
-    "ref"     -> HypBinding mn (HypRef (convertRefType a))
-    "boxtype" -> HypBinding mn HypBox
+    "term"    -> HypBinding mn (TermTy (convertOpen convertTermType a))
+    "prop"    -> HypBinding mn (PropTy (convertOpen convertPropType a))
+    "proof"   -> HypBinding mn (ProofTy (convertOpen convertProofType a))
+    "ref"     -> HypBinding mn (RefTy (convertOpen convertRefType a))
+    "boxtype" -> HypBinding mn (BoxTy (convertOpen convertBoxConst a))
     _         -> error $ concat ["Hypothetical object '"
                                 , show mn, "' has unknown kind: ", show a]      
 
@@ -339,8 +379,8 @@ convertProofTerm m =
   M [] (R (RConst "nne") [mPA, mRef]) ->
     NNE (convertProp mPA) (convertVarName mRef)
   M (_:_) _ -> error $ concat ["Encountered unexpected open proof term."]
-  M [] (R (RVar hole a) _args) ->
-    Hole (convertProofType a) hole
+  M [] (R (RVar hole (A _ p)) _args) ->
+    Hole (convertProofType p) hole
   M _ (R root args) ->
     error $ concat ["Encountered unknown proof-term with root '"
                    ,show root, "' and "

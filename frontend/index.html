@@ -6,22 +6,58 @@
     <script src="jquery-1.11.3.min.js"></script>
     <script type="text/javascript" charset="utf-8" src="ace/src-min/ace.js"></script>
     <script type="text/javascript" charset="utf-8" src="frontend.js"></script>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Serif:400,700italic,400italic,700' rel='stylesheet' type='text/css' />
     <link rel="stylesheet" type="text/css" href="frontend.css" />
     <link rel="stylesheet" type="text/css" href="boxproof.css" />
     <style type="text/css">
     </style>
   </head>
   <body>
-    <form id="control" style="position:absolute; top:0; left:0; right:0; height:40px;">
-      <button type="button" id="check" title="Check proof (you can also press Ctrl+Enter)">Check</button>
-      <button type="button" id="open" title="Open proof script file">Open</button>
-      <button type="button" id="save" title="Save proof script to file">Save</button>
-      <button style="align:right" type="button" id="report" title="Report bug (send email">Report Bug</button>
-      <a href="http://twelf.org/"><img src="mediumelf.png" style="width:auto; height:40px;float:right" /></a>
+    <form id="control" style="position:absolute; top:0; left:0; right:0; height:45px;">
+      <div id="logo">BoxProver</div>
+      <ul>
+        <li>
+          <button type="button" id="check" title="Check proof (you can also press Ctrl+Enter)">Check Proof</button>
+        </li>
+        <li>
+          <button type="button" id="open" title="Open proof script file">Open file</button>
+        </li>
+        <li>
+          <button type="button" id="save" title="Save proof script to file">Save as</button>
+        </li>
+        <li>
+          <button style="align:right" type="button" id="report" title="Report bug (send email">Report Bug</button>
+        </li>
+      </ul>
+      <a href="http://twelf.org/"><img src="mediumelf.png" id="elf" /></a>
     </form>
-    <div id="main" style="position:absolute; top:42px; left:0; right:0; bottom:0;" >
+    <div id="main" style="position:absolute; top:45px; left:0; right:0; bottom:0;" >
       <div id="editor"
-           style="position:absolute;top:0px;left:0;right:0;bottom:0;width:0;"></div>
+           style="position:absolute;top:0px;left:0;right:0;bottom:0;width:0;">
+%abbrev
+not_all_exi : ref (~ (all [x] P x) $) -> proof ((exi [x] ~ P x) $)
+  = [l0]
+     (~ (exi [x] ~ P x)         assumption; [h]
+        (var[x]
+           ~ P x \/ ~ ~ P x     by lem ; [alt]
+           ( ~ (P x)            assumption; [npx]
+             (exi [y] ~ P y)    by exi_i x npx ; [lexi]
+             bot                by neg_e lexi h ; [lbot]
+             P x                by bot_e lbot
+           )                    ; [case1]
+           ( ~ ~ P x            assumption; [nnpx]
+              P x               by nne nnpx
+           )                    ; [case2]
+           P x                  by dis_e alt case1 case2
+        )                       ; [allbox]
+        all P                   by all_i allbox ; [allp]
+        bot                     by neg_e allp l0
+     )                          ; [botbox]
+     ~ ~ (exi [y] ~ P y)        by neg_i botbox ; [nexi]
+     HOLE1 ; [hole]
+     HOLE
+     .
+      </div>
       <div id="vsplitter"
            style="position:absolute;top:0px;left:0;right:0;bottom:0;cursor:ew-resize;"></div>
       <div id="results"

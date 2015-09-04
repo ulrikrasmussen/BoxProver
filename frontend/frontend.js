@@ -31,7 +31,7 @@
 
     function setInitialLayout() {
         vpos = main.width() / 2;
-        hpos = main.height() / 2;
+        hpos = main.height() / 5;
     }
 
     var resizeTimer;
@@ -66,6 +66,22 @@
         a.setAttribute('download', 'proof.elf');
         a.setAttribute('href', 'data:text/plain;base64,' + window.btoa(aceEditor.getValue()));
         a.click();
+    }
+
+    function onOpenClickHandler() {
+        var fileElem = document.createElement('input');
+        fileElem.setAttribute('type', 'file');
+        $(fileElem).change(function(evt) {
+            var f = evt.target.files[0];
+            if (f == null)
+                return;
+            var reader = new FileReader();
+            reader.onload = (function(e) {
+                aceEditor.setValue(reader.result);
+            });
+            reader.readAsText(f);
+        });
+        fileElem.click();
     }
 
     function onCheckClickHandler() {
@@ -111,8 +127,11 @@
                 var response = $.parseJSON(data);
                 output.html('<pre><samp>' + response.output + '</samp></pre>');
                 prooftable.html(response.prooftable);
+                output.scrollTop(output.prop("scrollHeight"));
             })
-            .fail(function(hxr, textStatus, errorThrown) { output.html("Request failed with error: " + textStatus); })
+            .fail(function(hxr, textStatus, errorThrown) {
+                output.html("Request failed with error: " + textStatus);
+            })
             .always(function() { checkRequest = null; });
     }
     
@@ -125,10 +144,11 @@
         output     = $("#output");
         prooftable = $("#prooftable");
         checkButton = $("#check");
-        saveButton = $("#save")
+        saveButton = $("#save");
+        openButton = $("#open");
         
         aceEditor = ace.edit("editor");
-        aceEditor.setTheme("ace/theme/solarized_dark");
+        //        aceEditor.setTheme("ace/theme/solarized_dark");
         aceEditor.commands.addCommand({
             name: 'CheckCommand',
             bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
@@ -146,5 +166,6 @@
         hsplitter.mousedown(onHSplitterMouseDownHandler);
         checkButton.click(onCheckClickHandler);
         saveButton.click(onSaveClickHandler);
+        openButton.click(onOpenClickHandler);
     });
 })();
