@@ -1,12 +1,13 @@
 (function() {
     var SERVER_URL = 'http://localhost:8000'
-    
+
+    var activeTabName;
     var main;
     var editor;
     var vsplitter;
     var hsplitter;
     var aceEditor;
-    var results;
+    var left;
     var output;
     var prooftable;
 
@@ -17,21 +18,21 @@
         var w = main.width();
         var h = main.height();
         var splitSize = 6;
-        editor.width(vpos - splitSize);
-        results.css({ left: vpos,
-                      width: w - vpos });
+        left.width(vpos - splitSize);
+        prooftable.css({ left: vpos,
+                         width: w - vpos });
         vsplitter.css({ left: vpos - splitSize,
                         width: splitSize });
-        output.css({ height: hpos - splitSize });
-        prooftable.css({ height: h - hpos,
-                         top: hpos });
+        editor.css({ height: hpos - splitSize });
+        output.css({ height: h - hpos,
+                     top: hpos });
         hsplitter.css({ top: hpos - splitSize,
                         height: splitSize });
     }
 
     function setInitialLayout() {
         vpos = main.width() / 2;
-        hpos = main.height() / 5;
+        hpos = main.height() - main.height() / 5;
     }
 
     var resizeTimer;
@@ -42,12 +43,12 @@
 
     function onVSplitterMouseDownHandler() {
         function hideVWindows() {
-            editor.hide();
-            results.hide();
+            left.hide();
+            prooftable.hide();
         }
         function showVWindows() {
-            editor.show();
-            results.show();
+            left.show();
+            prooftable.show();
         }        
         hideVWindows();
         $(window).mousemove(function(event) {
@@ -148,11 +149,46 @@
             })
             .success(function(response) {
                 output.html('<pre><samp>' + response.output + '</samp></pre>');
-                prooftable.html(response.prooftable);
                 output.scrollTop(output.prop("scrollHeight"));
+                prooftable.html('');
+                if (!response.check) return;
+                var tabsList = $('<ul id="tabButtons">');
+                var contentDivs = $('<div id="tabPanels"></div>');
+                if (!(activeTabName in response.prooftables))
+                    activeTabName = null;
+                $.each(response.prooftables, function(name, proofHtml){
+                    var tab = $('<li><a>' + name + '</a></li>');
+                    var content = $('<div>' + proofHtml + '</div>');
+                    content.addClass("tabContent");
+                    activeTabName = activeTabName || name;
+                    if (name === activeTabName) {
+                        tab.addClass("active");
+                    }
+                    else
+                    {
+                        tab.addClass("inactive");
+                        content.addClass("hide");
+                    }
+                    
+                    tab.click((function(theTab, theContent, theName) {
+                        return function() {
+                            $("#tabButtons li.active").addClass("inactive").removeClass("active");
+                            $("#tabPanels div").addClass("hide");
+                            theTab.removeClass("inactive").addClass("active");
+                            theContent.removeClass("hide");
+                            activeTabName = theName;
+                        };
+                    })(tab, content, name));
+                    
+                    tabsList.append(tab);
+                    contentDivs.append(content);
+                });
+                prooftable.append(tabsList);
+                prooftable.append(contentDivs);
             })
             .fail(function(hxr, textStatus, errorThrown) {
                 output.html("Request failed with error: " + textStatus);
+                output.scrollTop(output.prop("scrollHeight"));
             })
             .always(function() { checkRequest = null; });
     }
@@ -162,7 +198,7 @@
         editor       = $("#editor");
         vsplitter    = $("#vsplitter");
         hsplitter    = $("#hsplitter");
-        results      = $("#results");
+        left         = $("#left");
         output       = $("#output");
         prooftable   = $("#prooftable");
         checkButton  = $("#check");
@@ -171,7 +207,7 @@
         reportButton = $("#report");
         
         aceEditor = ace.edit("editor");
-        //        aceEditor.setTheme("ace/theme/solarized_dark");
+        aceEditor.setTheme("ace/theme/chrome");
         aceEditor.commands.addCommand({
             name: 'CheckCommand',
             bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
@@ -180,6 +216,7 @@
             },
             readOnly: true
         });
+        aceEditor.getSession().setMode("ace/mode/boxprover");
         
         setInitialLayout();
         updateLayout();

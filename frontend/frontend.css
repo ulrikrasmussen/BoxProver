@@ -2,7 +2,7 @@ html {
     height: 100%;
     width: 100%;
     overflow: hidden;
-    box-sizing: border-box; 
+    box-sizing: border-box;
 }
 
 *, *:before, *:after {
@@ -16,11 +16,11 @@ body {
     height:100%;
     width:100%;
     font-family: Helvetica, Arial, FreeSans, sans-serif;
+    font-size: 14px;
 }
 
 #control {
     margin:0px;
-    font-size:14px;
     background-color: #4679bd;
     border-bottom: 4px solid #aaa;
 }
@@ -73,7 +73,7 @@ body {
 }
 
 #editor {
-    font-size: inherit;
+    font-size: 18px;
 }
 
 #vsplitter, #hsplitter {
@@ -86,6 +86,5 @@ body {
 }
 
 #prooftable {
-    margin-left: 8px;
     overflow: auto;
 }

@@ -32,9 +32,10 @@
       <a href="http://twelf.org/"><img src="mediumelf.png" id="elf" /></a>
     </form>
     <div id="main" style="position:absolute; top:45px; left:0; right:0; bottom:0;" >
-      <div id="editor"
-           style="position:absolute;top:0px;left:0;right:0;bottom:0;width:0;">
-        %abbrev
+      <div id="left" style="position:absolute;top:0px;left:0;right:0;bottom:0;width:0;">
+        <div id="editor"
+             style="position:absolute;top:0px;left:0;right:0;bottom:0;">
+%abbrev
 not_all_exi : ref (~ (all [x] P x) $) -> proof ((exi [x] ~ P x) $)
   = [l0]
      (~ (exi [x] ~ P x)         assumption; [h]
@@ -56,20 +57,19 @@ not_all_exi : ref (~ (all [x] P x) $) -> proof ((exi [x] ~ P x) $)
         ~ ~ (exi [y] ~ P y)        by neg_i botbox ; [nexi]
      (_ : proof (Q (P T) $)) ; [hole]
      _
-     .
-      </div>
-      <div id="vsplitter"
-           style="position:absolute;top:0px;left:0;right:0;bottom:0;cursor:ew-resize;"></div>
-      <div id="results"
-           style="position:absolute;top:0px;left:0;right:0;bottom:0;">
-        <div id="output"
-             style="position:absolute;top:0px;left:0;right:0;bottom:0;">
+        .
+        lemma2 : proof (top $) = top_i.
         </div>
         <div id="hsplitter"
              style="position:absolute;top:0px;left:0;right:0;bottom:0;width:100%;cursor:ns-resize;"></div>
-        <div id="prooftable"
+        <div id="output"
              style="position:absolute;top:0px;left:0;right:0;bottom:0;">
         </div>
+      </div>
+      <div id="vsplitter"
+           style="position:absolute;top:0px;left:0;right:0;bottom:0;cursor:ew-resize;"></div>
+      <div id="prooftable"
+           style="position:absolute;top:0px;left:0;right:0;bottom:0;">
       </div>
     </div>
   </body>

@@ -85,20 +85,20 @@ checkHandler = do
   proof <- maybe missingProofResponse return mproof
   bin <- getTwelfBinPath
   fitch <- getBaseSigPath
-  checkResult <- liftIO $ checkDecl bin fitch (BS.unpack proof)
+  checkResult <- liftIO $ check bin fitch (BS.unpack proof)
   modifyResponse $ setHeader "Content-Type" "application/json"
   case checkResult of
     Left err -> writeObj
                   [ "check" .= Bool False
                   , "output" .= String (fromString err)
                   ]
-    Right resp -> do
-      (n, _, m) <- liftIO $ extractDecl bin fitch (BS.unpack proof)
-      let linearProof = linearize $ convertOpenProofTerm m
-      let proofmarkup = renderMarkup $ render linearProof
+    Right (resp, defns) ->
       writeObj
         [ "check" .= Bool True
         , "output" .= String (fromString resp)
-        , "name" .= String (fromString n)
-        , "prooftable" .= String (toStrict proofmarkup)
+        , "prooftables" .=
+            object [ fromString n .= String (toStrict proofmarkup)
+                   | (n, _, m) <- defns
+                   , let linearProof = linearize $ convertOpenProofTerm m
+                   , let proofmarkup = renderMarkup $ render linearProof ]
         ]
