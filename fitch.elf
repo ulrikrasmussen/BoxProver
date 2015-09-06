@@ -17,13 +17,13 @@ top  : prop.
 %infix right 5 =>.
 %prefix 8 ~.
 
-boxtype : type. %name boxtype Box#.
-$ : prop -> boxtype. %postfix 4 $.
-tm : (term -> boxtype) -> boxtype.
-,,, : prop -> boxtype -> boxtype. %infix right 3 ,,,.
+sequent : type. %name sequent Sequent#.
+$ : prop -> sequent. %postfix 4 $.
+tm : (term -> sequent) -> sequent.
+,,, : prop -> sequent -> sequent. %infix right 3 ,,,.
 
-proof : boxtype -> type. %name proof Alpha#.
-ref : boxtype -> type. %name ref Ref#.
+proof : sequent -> type. %name proof Alpha#.
+ref : sequent -> type. %name ref Ref#.
 
 var : ({t:term} proof (S t)) -> proof (tm S).
 assumption; : {Phi} (ref (Phi $) -> proof S) -> proof (Phi ,,, S). %infix right 4 assumption;.

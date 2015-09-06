@@ -274,15 +274,15 @@ convertBoxType m =
     BoxType [] (Right $ convertProp pm)
   M [] (R (RVar x _) ys) ->
     BoxType [] (Left (x, map convertVarName ys))
-  _ -> error $ concat ["Malformed box type: ", show m]
+  _ -> error $ concat ["Malformed sequent: ", show m]
 
 convertRefType :: P -> RefType
 convertRefType (P "ref" [bt]) = RefType (convertBoxType bt)
 convertRefType p = error $ "Not a ref type: " ++ show p
 
 convertBoxConst :: P -> BoxConst
-convertBoxConst (P "boxtype" []) = BoxConst
-convertBoxConst p = error $ "Not a boxtype constant: " ++ show p
+convertBoxConst (P "sequent" []) = BoxConst
+convertBoxConst p = error $ "Not a sequent constant: " ++ show p
 
 convertProofType :: P -> ProofType
 convertProofType (P "proof" [bt]) = ProofType (convertBoxType bt)
@@ -306,9 +306,9 @@ convertHypothesis (mn, _, a@(A _ (P name _))) =
     "prop"    -> HypBinding mn (PropTy (convertOpen convertPropType a))
     "proof"   -> HypBinding mn (ProofTy (convertOpen convertProofType a))
     "ref"     -> HypBinding mn (RefTy (convertOpen convertRefType a))
-    "boxtype" -> HypBinding mn (BoxTy (convertOpen convertBoxConst a))
+    "sequent" -> HypBinding mn (BoxTy (convertOpen convertBoxConst a))
     _         -> error $ concat ["Hypothetical object '"
-                                , show mn, "' has unknown kind: ", show a]      
+                                , show mn, "' has unknown type: ", show a]
 
 convertVarName :: M -> VarName
 convertVarName (M [] (R (RVar x _) _)) = x
