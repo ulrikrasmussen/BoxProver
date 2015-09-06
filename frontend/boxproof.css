@@ -136,5 +136,14 @@ ul#tabButtons {
 }
 
 .context-separator {
-    font-style: italic;
+    cursor: pointer;
+    color: #4679bd;
+    border-bottom: 1px solid #7EA1D1;
 }
+
+.context-separator .el {
+    font-size: 75%;
+    float: right;
+}
+
+.collapse { height: 0; overflow: hidden; };

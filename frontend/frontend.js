@@ -197,54 +197,7 @@
               },
               timeout: 8000
             })
-            .success(function(response) {
-                output.html('<pre><samp>' + response.output + '</samp></pre>');
-                output.scrollTop(output.prop("scrollHeight"));
-                prooftable.html('');
-                if (!response.check) {
-                    if (enhanceCheckBox.prop('checked'))
-                        playSound('trombone.wav');
-                    return;
-                } else
-                {
-                    if (enhanceCheckBox.prop('checked'))
-                        playSound('coin.wav');
-                }
-                var tabsList = $('<ul id="tabButtons">');
-                var contentDivs = $('<div id="tabPanels"></div>');
-                var allNames = $.map(response.prooftables, function(o) { return o.name; });
-                if (!($.inArray(activeTabName, allNames) >= 0))
-                    activeTabName = null;
-                $.each(response.prooftables, function(i, table){
-                    var tab = $('<li><a>' + table.name + '</a></li>');
-                    var content = $('<div>' + table.html + '</div>');
-                    content.addClass("tabContent");
-                    activeTabName = activeTabName || table.name;
-                    if (table.name === activeTabName) {
-                        tab.addClass("active");
-                    }
-                    else
-                    {
-                        tab.addClass("inactive");
-                        content.addClass("hide");
-                    }
-                    
-                    tab.click((function(theTab, theContent, theName) {
-                        return function() {
-                            $("#tabButtons li.active").addClass("inactive").removeClass("active");
-                            $("#tabPanels div").addClass("hide");
-                            theTab.removeClass("inactive").addClass("active");
-                            theContent.removeClass("hide");
-                            activeTabName = theName;
-                        };
-                    })(tab, content, table.name));
-                    
-                    tabsList.append(tab);
-                    contentDivs.append(content);
-                });
-                prooftable.append(tabsList);
-                prooftable.append(contentDivs);
-            })
+            .success( handleCheckResponse )
             .fail(function(hxr, textStatus, errorThrown) {
                 output.html("Request failed with error: " + textStatus);
                 output.scrollTop(output.prop("scrollHeight"));
@@ -252,6 +205,69 @@
             .always(function() { checkRequest = null; });
     }
 
+    function handleCheckResponse(response) {
+        output.html('<pre><samp>' + response.output + '</samp></pre>');
+        output.scrollTop(output.prop("scrollHeight"));
+        prooftable.html('');
+        if (!response.check) {
+            if (enhanceCheckBox.prop('checked'))
+                playSound('trombone.wav');
+            return;
+        } else
+        {
+            if (enhanceCheckBox.prop('checked'))
+                playSound('coin.wav');
+        }
+        var tabsList = $('<ul id="tabButtons">');
+        var contentDivs = $('<div id="tabPanels"></div>');
+        var allNames = $.map(response.prooftables, function(o) { return o.name; });
+        if (!($.inArray(activeTabName, allNames) >= 0))
+            activeTabName = null;
+        $.each(response.prooftables, function(i, table){
+            var tab = $('<li><a>' + table.name + '</a></li>');
+            var content = $('<div>' + table.html + '</div>');
+            content.addClass("tabContent");
+
+            content.find("div.context-separator").each(function(i,sep) {
+                var ctx = $(sep).next();
+                $(sep).append('&nbsp;<i class="el el-caret-down"></i>');
+                ctx.addClass("collapse");
+                $(sep).click((function(theSep, theCtx) {
+                    return function() {
+                        theCtx.toggleClass("collapse");
+                        theSep.find('i').toggleClass('el-caret-down');
+                        theSep.find('i').toggleClass('el-caret-up');
+                    }
+                })($(sep),ctx));
+            });
+            
+            activeTabName = activeTabName || table.name;
+            if (table.name === activeTabName) {
+                tab.addClass("active");
+            }
+            else
+            {
+                tab.addClass("inactive");
+                content.addClass("hide");
+            }
+            
+            tab.click((function(theTab, theContent, theName) {
+                return function() {
+                    $("#tabButtons li.active").addClass("inactive").removeClass("active");
+                    $("#tabPanels div").addClass("hide");
+                    theTab.removeClass("inactive").addClass("active");
+                    theContent.removeClass("hide");
+                    activeTabName = theName;
+                };
+            })(tab, content, table.name));
+            
+            tabsList.append(tab);
+            contentDivs.append(content);
+        });
+        prooftable.append(tabsList);
+        prooftable.append(contentDivs);
+    }
+    
     function optionalLocalStorageGetItem(key) {
         try {
             return localStorage.getItem(key);
