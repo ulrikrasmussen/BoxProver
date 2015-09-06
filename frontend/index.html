@@ -30,7 +30,10 @@
           <button type="button" id="share" title="Share proof script via URL"><i class="el el-share"></i>Share</button>
         </li>
         <li>
-          <button style="align:right" type="button" id="report" title="Report bug (send email"><i class="el el-exclamation-sign"></i>Report Bug</button>
+          <button type="button" id="report" title="Report bug (send email"><i class="el el-exclamation-sign"></i>Report Bug</button>
+        </li>
+        <li>
+          <button type="button" id="help" title="Help"><i class="el el-info-circle"></i>Help</buttion>
         </li>
       </ul>
       <input id="enhance" type="checkbox" title="Enhance experience!"></input>
@@ -40,30 +43,6 @@
       <div id="left" style="position:absolute;top:0px;left:0;right:0;bottom:0;width:0;">
         <div id="editor"
              style="position:absolute;top:0px;left:0;right:0;bottom:0;">
-%abbrev
-not_all_exi : ref (~ (all [x] P x) $) -> proof ((exi [x] ~ P x) $)
-  = [l0]
-     (~ (exi [x] ~ P x)         assumption; [h]
-        (var[x]
-           ~ P x \/ ~ ~ P x     by lem ; [alt]
-           ( ~ (P x)            assumption; [npx]
-             (exi [y] ~ P y)    by exi_i x npx ; [lexi]
-             bot                by neg_e lexi h ; [lbot]
-             P x                by bot_e lbot
-           )                    ; [case1]
-           ( ~ ~ P x            assumption; [nnpx]
-              P x               by nne nnpx
-           )                    ; [case2]
-           P x                  by dis_e alt case1 case2
-        )                       ; [allbox]
-        all P                   by all_i allbox ; [allp]
-        bot                     by neg_e allp l0
-     )                          ; [botbox]
-        ~ ~ (exi [y] ~ P y)        by neg_i botbox ; [nexi]
-     (_ : proof (Q (P T) $)) ; [hole]
-     _
-        .
-        lemma2 : proof (top $) = top_i.
         </div>
         <div id="hsplitter"
              style="position:absolute;top:0px;left:0;right:0;bottom:0;width:100%;cursor:ns-resize;"></div>

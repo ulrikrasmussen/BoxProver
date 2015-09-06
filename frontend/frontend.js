@@ -231,10 +231,6 @@
                              : '<i class="el el-question open-indicator"></i>';
             var tab = $('<li><a>' + closedIndicator + table.name + '</a></li>');
             var content = $('<div></div>');
-            if (table.closed)
-                content.append("<p style='float:right;' class='closed-indicator'>Proof is closed!</p>");
-            else
-                content.append("<p style='float:right;' class='open-indicator'>Proof still has holes.</p>");
             content.append(table.html);
             content.addClass("tabContent");
 
@@ -319,6 +315,7 @@
         shareButton  = $("#share");
         openButton   = $("#open");
         reportButton = $("#report");
+        helpButton   = $("#help");
         enhanceCheckBox = $("#enhance");
         
         aceEditor = ace.edit("editor");
@@ -344,6 +341,7 @@
         shareButton.click(onShareClickHandler);
         openButton.click(onOpenClickHandler);
         reportButton.click(onReportClickHandler);
+        helpButton.click(function() { window.open("help.html");  });
         enhanceCheckBox.click(onEnhanceClickHandler);
 
         query = getQueryParameters();

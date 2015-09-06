@@ -45,8 +45,13 @@ holeSpan :: Html -> Html
 holeSpan = H.span ! A.class_ "hole"
 
 render :: OpenLineProof -> Html
-render (OpenLineProof hyps frags) = do
---  H.h1 $ fromString "Proof body"
+render l@(OpenLineProof hyps frags) = do
+  let pclosed = H.p ! A.style "float: right;"
+  if isClosedProof l then
+     pclosed ! A.class_ "closed-indicator" $ "Proof is closed!"
+  else
+     pclosed ! A.class_ "open-indicator" $
+       "Proof contains holes and/or higher-order objects."
   renderFrags frags
   H.h1 $ fromString "Proof context"
   renderProofHypotheses hyps

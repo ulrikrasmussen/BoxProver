@@ -26,10 +26,11 @@ data OpenLineProof = OpenLineProof [HypBinding] [ProofFragment]
 
 isClosedProof :: OpenLineProof -> Bool
 isClosedProof (OpenLineProof bs frags) =
-  and [all isClosedTermOrPropHyp bs
+  and [all isFuncOrPredHyp bs
       ,all isClosedFragment frags]
   where
-    isClosedTermOrPropHyp (HypBinding _ typ) = isClosedTermTy typ || isClosedPropTy typ
+    isFuncOrPredHyp (HypBinding _ typ) =
+      not (isExoticPropTy typ || isExoticPropTy typ)
     isClosedFragment frag =
       case frag of
       Line _ _ _ refs -> all isClosedRef refs
@@ -49,15 +50,20 @@ depth = foldr max 0 . map aux
 
 linearize :: Open (ProofTerm, Sequent) -> OpenLineProof
 linearize (Open hyps (t, sq)) =
-  OpenLineProof hyps (flatten frags)
+  OpenLineProof hyps (flatten True frags)
   where
     (frags, _) = evalState (linearize' t sq) initLinearizationState
-    flatten [] = []
-    flatten [Box _ _ frags'] = flatten frags'
-    flatten (VarIntroduction l x:frags') = VarIntroduction l x:flatten frags'
-    flatten (Line l phi "assumption" refs:frags') =
-        Line l phi "premise" refs:flatten frags'
-    flatten frags' = frags'
+    flatten _ [] = []
+    flatten p [Box _ _ frags'] = flatten p frags'
+    flatten p (VarIntroduction l x:frags') =
+        VarIntroduction l x:flatten p frags'
+    flatten p (Line l phi "assumption" refs:frags') =
+        let rule = if p then "premise" else "assumption"
+        in Line l phi rule refs:flatten p frags'
+    flatten _ frags' = map flatten' frags'
+
+    flatten' (Box l1 l2 frags') = Box l1 l2 (flatten False frags')
+    flatten' l = l
 
 data LinearizationState =
   LinearizationState { nextLine :: Int
