@@ -122,9 +122,28 @@ renderProofHypotheses hyps =
   H.table ! A.class_ "hypotheses" $ mapM_ renderHyp hyps
   where
     renderHyp (HypBinding mx typ) = H.tr $ do
-      H.td $ fromString $ maybe "_" id mx
+      H.td $ varDecoration typ $ fromString $ maybe "_" id mx
       H.td $ " : "
       H.td $ renderObjType typ
+    varDecoration typ
+        | isExoticTermTy typ =
+            exoticSpan ("This term has non-term dependencies and "
+                        ++ "is not a valid first-order object.")
+        | isExoticPropTy typ =
+            exoticSpan ("This proposition has non-term dependencies and "
+                             ++ "is not a valid first-order object.")
+        | isHoleTy typ = holeSpan
+        | otherwise = id
+    isExoticTermTy (TermTy (Open termHyps TermConst)) =
+                   any (not . isClosedTermTy . bindTy) termHyps
+    isExoticTermTy _ = False
+    isExoticPropTy (PropTy (Open propHyps PropConst)) =
+                   any (not . isClosedTermTy . bindTy) propHyps
+    isExoticPropTy _ = False
+    isHoleTy (RefTy _) = True
+    isHoleTy (BoxTy _) = True
+    isHoleTy (ProofTy _) = True
+    isHoleTy _ = False
 
 renderObjType :: ObjType -> Html
 renderObjType (TermTy c@(Open hyps TermConst))
@@ -132,33 +151,29 @@ renderObjType (TermTy c@(Open hyps TermConst))
         let arity = length hyps in
         if arity == 0 then metaKindSpan "Constant" else
             metaKindSpan "Term" >> parens (fromString $ show arity)
-    | otherwise = exoticSpan ("This term has non-term dependencies and "
-                              ++ "is not a valid first-order object.")
-                    $ renderContextual (const (metaKindSpan "Term")) c
+    | otherwise = renderContextual (const (metaKindSpan "Term")) c
 renderObjType (PropTy c@(Open hyps PropConst))
     | all (isClosedTermTy . bindTy) hyps =
         let arity = length hyps in
         if arity == 0 then metaKindSpan "Proposition" else
             metaKindSpan "Predicate" >> parens (fromString $ show arity)
-    | otherwise = exoticSpan ("This proposition has non-term dependencies and "
-                             ++ "is not a valid first-order object.")
-                    $ renderContextual (const (metaKindSpan "Proposition")) c
+    | otherwise = renderContextual (const (metaKindSpan "Proposition")) c
 renderObjType (RefTy c) =
-    holeSpan $ renderContextual
-                 (\(RefType bt) -> metaKindSpan "Ref" >> parens (renderBoxType bt))
-                 c
+    renderContextual
+      (\(RefType bt) -> metaKindSpan "Ref" >> parens (renderBoxType bt))
+      c
 renderObjType (BoxTy c) =
-    holeSpan $ renderContextual (const (metaKindSpan "Sequent")) c
+    renderContextual (const (metaKindSpan "Sequent")) c
 renderObjType (ProofTy c) =
-    holeSpan $ flip renderContextual c $
-                 \(ProofType bt) -> metaKindSpan "Proof" >> parens (renderBoxType bt)
+    flip renderContextual c $
+      \(ProofType bt) -> metaKindSpan "Proof" >> parens (renderBoxType bt)
 
 renderContextual :: (a -> Html) -> Open a -> Html
 renderContextual f (Open [] a) = f a
 renderContextual f (Open bindings a) = do
-  metaKindSpan "Context"
+  metaKindSpan "Ctx"
   let bindingList = intersperse (fromString ", ") $ map renderBinding bindings
-  contextSpan $ parens $ sequence_ $ bindingList
+  parens $ contextSpan $ sequence_ $ bindingList
   _ <- fromString " "
   f a
     where
