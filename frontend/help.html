@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700"/>
     <script type="text/javascript" charset="utf-8" src="ace/src-min/ace.js"></script>
     <link rel="stylesheet" type="text/css" href="elusive-icons/css/elusive-icons.css" />
+    <link rel="stylesheet" type="text/css" href="boxproof.css" />
     <script src="jquery-1.11.3.min.js"></script>
     <script>
       function openExample()
@@ -43,7 +44,7 @@
       margin-right: auto;
       }
 
-      table tr:first-child {
+      #ruletable tr:first-child {
       font-weight: bold;
       }
 
@@ -56,12 +57,10 @@
       font-family: 'Source Code Pro';
       }
 
-      #ruletable td {
-      vertical-align: top;
-      }
-
-      #ruletable pre {
+      #ruletable pre, .example-table pre {
       margin:0;
+      background-color: #eef;
+      padding:5px;
       }
 
       #ruletable {
@@ -92,8 +91,142 @@
   <body>
     <div id="main">
       <h1>BoxProver Tutorial</h1>
+      <p>
+        BoxProver is a userfriendly front-end to the <a href="http://twelf.org/">Twelf</a> proof assistant, and provides a simple way to encode and verify natural deduction proofs in propositional and first-order logic using Fitch-style notation. Although all proofs will be specified in the language of Twelf, no knowledge of this language is required from the user. Besides verification, BoxProver also has facilities for producing visual representations of proofs, closely following the style and notation of the book <a href="http://www.cs.bham.ac.uk/research/projects/lics/">Logic in Computer Science, 2nd edition</a> by Huth &amp; Ryan (henceforth referred to as H&amp;R).
+      </p>
+
+      <p>
+        Every BoxProver script must follow this general format:
+      </p>
+
+      <table class="example-table">
+        <tr>
+          <td>
+<pre>%abbrev
+<i>proof name</i> : {p1}{p2} ... {pn} proof ( <i>... sequent ...</i> ) =
+[p1][p2] ... [pn]
+
+ <i>... proof body ...</i>
+
+.
+</pre>
+          </td>
+        </tr>
+      </table>
+
+      <h2>A simple example</h2>
+      <p>
+        We explain this using an example. Let us consider Example 1.6 from H&amp;R:
+      </p>
+
+<table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="par">(</span><span class="pred">p</span><span class="op"> ∧ </span><span class="pred">q</span><span class="par">)</span><span class="op"> ∧ </span><span class="pred">r</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">2</td><td class="conc "><span class="pred">s</span><span class="op"> ∧ </span><span class="pred">t</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">3</td><td class="conc "><span class="pred">p</span><span class="op"> ∧ </span><span class="pred">q</span></td><td class="rule ">∧e₁ 1</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">4</td><td class="conc "><span class="pred">q</span></td><td class="rule ">∧e₂ 3</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">5</td><td class="conc "><span class="pred">s</span></td><td class="rule ">∧e₁ 2</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">6</td><td class="conc "><span class="pred">q</span><span class="op"> ∧ </span><span class="pred">s</span></td><td class="rule ">∧i 4, 5</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
+
+      <p>The box proof above has been produced by BoxProver from the following formal proof script (click the button on the right to open the script in BoxProver):</p>
+      <table class="example-table">
+        <tr>
+          <td>
+<pre>%abbrev
+ex1-6 : {p}{q}{r}{s}{t}
+        proof ((p /\ q) /\ r ,,, s /\ t ,,, q /\ s $) =
+[p][q][r][s][t]
+(p /\ q) /\ r       assumption;    [l1]
+s /\ t              assumption;    [l2]
+p /\ q              by con_e1 l1 ; [l3]
+q                   by con_e2 l3 ; [l4]
+s                   by con_e1 l2 ; [l5]
+q /\ s              by con_i l4 l5
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <p>
+        The proof script language is intentionally designed to resemble Fitch-style notation as much as possible. As can be seen, the proof script is also written line-by-line with a formula on each line accompanied by the rule justifying it. Unlike Fitch-proofs, lines are not referenced by their number, but are instead given a name. The names are written in square brackets in the rightmost column, and are intentionally chosen to resemble the original line numbering scheme.</p>
+      <p>
+        The <code>%abbrev</code> declaration on the first line is required by Twelf and is unrelated to the proof that we are formalizing. It changes the way Twelf does type-checking and is required when we want to develop proofs in a more interactive fashion. For this particular example we can actually remove it, but since it never results in an error to include it, it is safest just to keep it in all your proofs.
+      </p>
+      <p>
+        The formal proof language require that we explicitly write down the sequent that we want to prove as well as the names of all propositions that we will be referring to. This information is provided in the preamble in lines 2-4. Line 2 defines the name of our proof to be <code>ex1-6</code> and defines the names <code>p, q, r, s, t</code> as propositions such that they can be used in the statement of the proof sequent in Line 3. Each name must be put in curly braces, and BoxProver figures out by itself that each name stands for a proposition based on how it is used. A more verbose, but equivalent, way to express the same would be by the line <pre style="text-align: center;">{p:prop}{q:prop}{r:prop}{s:prop}{t:prop}</pre> Line 3 defines the proof <i>type</i> using the operator <code>proof</code> followed by an encoding of the sequent <center style="margin:1em;"><i>(p ∧ q) ∧ r , s ∧ t ⊢ q ∧ s.</i></center> This is encoded as a list of formulas separated by <code>,,,</code> and terminated by <code>$</code>. The last formula is the conclusion, and all previous formulas make up the premises.</p>
+      <p>
+        The sequent is followed by an equals sign which marks the beginning of the proof body. The first thing we must do in the proof body is to repeat the declarations of the propositions that we intend to use, but this time enclosed in square brackets instead of curly braces. Then follows the actual proof body which is terminated by a single dot (<code>.</code>).
+      </p>
+
+      <p>
+        A proof line is justified either by an <i>introduction rule</i> or a <i>general rule</i>. The rule <code>assignment;</code> (note that the semicolon is part of the name) is an introduction rule, and requires that the line it appears on is given a name. The meaning of the rule is to take an assumption from the list of premises and make it available to the rest of the proof body. The line <pre style="text-align:center;">p /\ q by con_e1 l1</pre> is an example of a general rule, which must always begin with the keyword <code>by</code> followed by a rule name followed by a number of line references to previous lines.
+      </p>
+
+      <p>
+        Proof lines are combined using the <code>;</code> (semicolon) operator. The semicolon <i>must</i> be surrounded by whitespace and be followed by a line name enclosed in square brackets. This has the effect of giving a name to the conclusion of the rule to the left, which can then be referenced by later rules.
+      </p>
+
+      <h2>Temporary assumptions</h2>
+      <p>
+        Fitch-proofs uses boxes to demarcate temporary assumptions. The BoxProver encoding of temporary assumptions also closely resemble the Fitch notation, which we will demonstrate with another example. Consider Example 1.14 from H&amp;R:
+      </p>
+
+      <table class="example-table">
+        <tr>
+          <td><table class="boxproof"><tbody><tr><td class="line">1</td><td class="box "></td><td class="conc "><span class="pred">p</span><span class="op"> → </span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">2</td><td class="box active open"></td><td class="conc open"><span class="pred">p</span><span class="op"> ∧ </span><span class="pred">q</span></td><td class="rule open">assumption </td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">3</td><td class="box active "></td><td class="conc "><span class="pred">p</span></td><td class="rule ">∧e₁ 2</td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">4</td><td class="box active "></td><td class="conc "><span class="pred">q</span></td><td class="rule ">∧e₂ 2</td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">5</td><td class="box active "></td><td class="conc "><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">→e 3, 1</td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">6</td><td class="box active close"></td><td class="conc close"><span class="pred">r</span></td><td class="rule close">→e 4, 5</td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box"> </td><td class="conc"> </td><td class="rule"> </td><td class="box"> </td></tr><tr><td class="line">7</td><td class="box "></td><td class="conc "><span class="pred">p</span><span class="op"> ∧ </span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">→i 2-6</td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr></tbody></table>
+          </td>
+          <td style="padding-left:20px;">
+<pre>%abbrev
+ex1-14 : {p}{q}{r}
+  proof (p => (q => r)
+        ,,, p /\ q => r $) =
+[p][q][r]
+p => (q => r)   assumption; [l1]
+(   p /\ q      assumption; [l2]
+    p           by con_e1 l2 ; [l3]
+    q           by con_e2 l2 ; [l4]
+    q => r      by imp_e l3 l1 ; [l5]
+    r           by imp_e l4 l5
+)               ; [l2-6]
+p /\ q => r     by imp_i l2-6.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <p>
+        Local assumptions are simply represented by parentheses, with the caveat that the closing parenthesis must be followed by a semicolon and a name in brackets. All line references introduced inside the parentheses are invisible outside the parentheses (effictively introducing a <i>nested scope</i> similarly to scoping in programming languages), including the assumption made on Line 2. The name <code>l2-6</code> becomes a reference to the whole box and can be used in rules expecting a "box" premise.
+      </p>
+
+      <p>
+        To understand precisely how line references work, it might be instructive to see how the fully annotated proof script looks. This assigns a <i>"type"</i> to every line reference which is used to check that it is used correctly:
+      </p>
+      <table class="example-table">
+        <tr>
+          <td style="padding-left:20px;">
+<pre>%abbrev
+ex1-14 : {p}{q}{r}
+  proof (p => (q => r)
+        ,,, p /\ q => r $) =
+[p][q][r]
+p => (q => r)   assumption;      [l1:ref (p => (q => r) $)]
+(   p /\ q      assumption;      [l2:ref (p /\ q $)]
+    p           by con_e1 l2 ;   [l3:ref (p $)]
+    q           by con_e2 l2 ;   [l4:ref (q $)]
+    q => r      by imp_e l3 l1 ; [l5:ref (q => r $)]
+    r           by imp_e l4 l5
+)               ;                [l2-6 : ref (p /\ q ,,, r $)]
+p /\ q => r     by imp_i l2-6.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+      <p>
+        Note that every reference is typed by a <i>sequent</i> which for every single-line reference has no premises, and which for the "box" reference has a single premise and a single conclusion. That is, the annotation <code>l2-6 : ref (p /\ q ,,, r $)</code> indicates that lines 2 to 6 is a proof of the sequent <i>p ∧ q ⊢ r</i>.
+      </p>
       
       <h2>Rule reference</h2>
+      <p>
+        The following is a table showing the BoxProver names for each rule from H&amp;R. Each rule is accompanied by a minimal example showing its use. The examples are also a good way to get familiar with the notation used for formulas/propositions.
+      </p>
+      
       <table id="ruletable">
         <tr>
           <td>H &amp; R</td><td>BoxProver</td><td>Example</td><td></td>
