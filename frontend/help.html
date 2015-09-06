@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>BoxProver Guide</title>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Serif:400,700italic,400italic,700' rel='stylesheet' type='text/css' />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700"/>
+    <script type="text/javascript" charset="utf-8" src="ace/src-min/ace.js"></script>
+    <link rel="stylesheet" type="text/css" href="elusive-icons/css/elusive-icons.css" />
+    <script src="jquery-1.11.3.min.js"></script>
+    <script>
+      function openExample()
+      {
+        var proof = $(this).parents('tr').find('pre').text();
+        var url = "/index.html?proof=" + encodeURIComponent(proof);
+        window.open(url);
+      }
+      $().ready(function() {
+        $('.open-example').click(openExample);
+      });
+    </script>
+    <style>
+      html {
+      box-sizing: border-box;
+      }
+      
+      *, *:before, *:after {
+      box-sizing: inherit;
+      }
+      
+      body {
+      font-family: Helvetica, Arial, FreeSans, sans-serif;
+      }
+
+      #main {
+      width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      }
+
+      table {
+      margin-left: auto;
+      margin-right: auto;
+      }
+
+      table tr:first-child {
+      font-weight: bold;
+      }
+
+      .hrrule {
+      font-family: 'Doid Sans';
+      font-style: italic;
+      }
+
+      pre, .bprule {
+      font-family: 'Source Code Pro';
+      }
+
+      #ruletable td {
+      vertical-align: top;
+      }
+
+      #ruletable pre {
+      margin:0;
+      }
+
+      #ruletable {
+      border-collapse: collapse;
+      }
+      
+      #ruletable tr {
+      border-bottom: 1px solid #ccc;
+      }
+
+      #ruletable tr:first-child {
+      border-bottom: 2px solid black;
+      }
+
+      #ruletable tr:last-child {
+      border-bottom: none;
+      }
+      
+      #ruletable td {
+      padding: 6px 15px;
+      }
+
+      .open-example {
+      cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <h1>BoxProver Tutorial</h1>
+      
+      <h2>Rule reference</h2>
+      <table id="ruletable">
+        <tr>
+          <td>H &amp; R</td><td>BoxProver</td><td>Example</td><td></td>
+        </tr>
+        <tr><td><span class="hrrule">⊤i</span></td>
+          <td><span class="bprule">top_i</span></td>
+          <td>
+<pre>
+ex : proof (top $) =
+top by top_i.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">⊥e</span></td>
+          <td><span class="bprule">bot_e</span></td>
+          <td>
+<pre>
+ex : {p} proof (bot ,,, p /\ ~ p $) = [p]
+bot       assumption; [l0]
+p /\ ~ p  by bot_e l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">∧i</span></td>
+          <td><span class="bprule">con_i</span></td><td>
+<pre>
+ex : {p}{q} proof (p ,,, q ,,, p /\ q $) = [p][q]
+p      assumption; [l0]
+q      assumption; [l1]
+p /\ q by con_i l0 l1.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">∧e₁</span></td>
+          <td><span class="bprule">con_e1</span></td><td>
+<pre>
+ex : {p}{q} proof (p /\ q ,,, p $) = [p][q]
+p /\ q assumption; [l0]
+p      by con_e1 l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">∧e₂</span></td>
+          <td><span class="bprule">con_e2</span></td><td>
+<pre>
+ex : {p}{q} proof (p /\ q ,,, q $) = [p][q]
+p /\ q assumption; [l0]
+q      by con_e2 l0.
+</pre>
+</td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">∨i₁</span></td>
+          <td><span class="bprule">dis_i1</span></td><td>
+<pre>
+ex : {p}{q} proof (p ,,, p \/ q $) = [p][q]
+p      assumption; [l0]
+p \/ q by dis_i1 l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">∨i₂</span></td>
+          <td><span class="bprule">dis_i2</span></td><td>
+<pre>
+ex : {p}{q} proof (q ,,, p \/ q $) = [p][q]
+q      assumption; [l0]
+p \/ q by dis_i2 l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">∨e</span></td>
+          <td><span class="bprule">dis_e</span></td><td>
+<pre>
+ex : {p}{q} proof (p \/ q ,,, q \/ p $) = [p][q]
+p \/ q    assumption; [l0]
+(  p      assumption; [l1]
+   q \/ p by dis_i2 l1
+)         ; [case1]
+(  q      assumption; [l2]
+   q \/ p by dis_i1 l2
+)         ; [case2]
+q \/ p    by dis_e l0 case1 case2.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">→i</span></td>
+          <td><span class="bprule">imp_i</span></td><td>
+<pre>
+ex : {p} proof (p => p $) = [p]
+(  p    assumption; [l0]
+   p    by copy l0
+)       ; [case1]
+p => p  by imp_i case1.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">→e</span></td>
+          <td><span class="bprule">imp_e</span></td><td>
+<pre>
+ex : {p}{q} proof (p ,,, p => q ,,, q $) = [p][q]
+p      assumption; [l0]
+p => q assumption; [l1]
+q      by imp_e l0 l1.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">¬i</span></td>
+          <td><span class="bprule">neg_i</span></td><td>
+<pre>
+ex : {p} proof (p => bot ,,, ~ p $) = [p]
+p => bot    assumption; [l0]
+(  p        assumption; [l1]
+   bot      by imp_e l1 l0
+)           ; [case1]
+~ p         by neg_i case1.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">¬e</span></td>
+          <td><span class="bprule">neg_e</span></td><td>
+<pre>
+ex : {p} proof (p ,,, ~ p ,,, bot $) = [p]
+p    assumption; [l0]
+~ p  assumption; [l1]
+bot  by neg_e l0 l1.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">⊥e</span></td>
+          <td><span class="bprule">bot_e</span></td><td>
+<pre>
+ex : {p} proof (bot ,,, p /\ ~ p $) = [p]
+bot      assumption; [l0]
+p /\ ~ p by bot_e l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">∀i</span></td>
+          <td><span class="bprule">all_i</span></td><td>
+<pre>
+ex : {P} proof (all ([x] top \/ P x) $) = [P]
+(var [x]
+   top               by top_i ; [l0]
+   top \/ P x        by dis_i1 l0
+)                    ; [case1]
+all ([x] top \/ P x) by all_i case1.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">∀e</span></td>
+          <td><span class="bprule">all_e</span></td><td>
+<pre>
+ex : {P}{t} proof (all ([x] P x) ,,, P t $) = [P][t]
+all ([x] P x)  assumption; [l0]
+P t            by all_e t l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">∃i</span></td>
+          <td><span class="bprule">exi_i</span></td><td>
+<pre>
+ex : {P} proof (tm [t] P t ,,, exi ([x] P x) $) = [P]
+var[t]
+P t           assumption; [l0]
+exi ([x] P x) by exi_i t l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">∃e</span></td>
+          <td><span class="bprule">exi_e</span></td><td>
+<pre>
+ex : {P} proof (all ([x] P x) ,,, exi ([y] ~ P y)
+                              ,,, bot $) = [P]
+all ([x] P x)    assumption; [l0]
+exi ([y] ~ P y)  assumption; [l1]
+(var[z]
+   ~ P z         assumption; [l2]
+   P z           by all_e z l0 ; [l3]
+   bot           by neg_e l3 l2
+)                ; [case1]
+bot              by exi_e l1 case1.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">=i</span></td>
+          <td><span class="bprule">eq_i</span></td><td>
+<pre>
+ex : {t:term} proof (t == t $) = [t]
+t == t  by eq_i.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">=e</span></td>
+          <td><span class="bprule">eq_e</span></td><td>
+<pre>
+ex : {s}{t}{P} proof (s == t ,,, P s ,,, P t $) =
+[s][t][P]
+s == t  assumption; [l0]
+P s     assumption; [l1]
+P t     by eq_e ([x] P x) l1 l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">LEM</span></td>
+          <td><span class="bprule">lem</span></td><td>
+<pre>
+ex : {p} proof (p \/ ~ p $) = [p]
+p \/ ~ p  by lem.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">¬¬e</span></td>
+          <td><span class="bprule">nne</span></td><td>
+<pre>
+ex : {p} proof (~ ~ ~ p ,,, ~ p $) = [p]
+~ ~ ~ p  assumption; [l0]
+~ p      by nne l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+      </table>
+    </div>
+  </body>
+</html>
