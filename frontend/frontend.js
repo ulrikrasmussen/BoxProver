@@ -1,6 +1,4 @@
 (function() {
-    var SERVER_URL = 'http://localhost:8000'
-
     var activeTabName;
     var main;
     var editor;
