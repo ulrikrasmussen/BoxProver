@@ -91,10 +91,10 @@ renderFrags frags =
               boxcols True True l " "
       in case frag of
          VarIntroduction l x -> line l (show l) x "" (renderReference "var" [])
-         Line l phi rule refs ->
-           line l (show l) "" (renderFormula phi) (renderReference rule refs)
-         HoleLine l (ProofType bt) h ->
-           line l (show l) "" (holeSpan $ renderBoxType bt) (holeSpan $ fromString h)
+         Line l sq rule refs ->
+           line l (show l) "" (renderSequent sq) (renderReference rule refs)
+         HoleLine l (ProofType bt) h args ->
+           line l (show l) "" (holeSpan $ renderSequent bt) (holeSpan $ fromString h)
          Box l1 l2 frags' ->
            let open' = S.insert l1 open
                close' = S.insert l2 close
@@ -141,7 +141,7 @@ renderProofHypotheses hyps =
                    any (not . isClosedTermTy . bindTy) propHyps
     isExoticPropTy _ = False
     isHoleTy (RefTy _) = True
-    isHoleTy (BoxTy _) = True
+    isHoleTy (SequentTy _) = True
     isHoleTy (ProofTy _) = True
     isHoleTy _ = False
 
@@ -160,13 +160,13 @@ renderObjType (PropTy c@(Open hyps PropConst))
     | otherwise = renderContextual (const (metaKindSpan "Proposition")) c
 renderObjType (RefTy c) =
     renderContextual
-      (\(RefType bt) -> metaKindSpan "Ref to " >> (renderBoxType bt))
+      (\(RefType bt) -> metaKindSpan "Ref to " >> (renderSequent bt))
       c
-renderObjType (BoxTy c) =
+renderObjType (SequentTy c) =
     renderContextual (const (metaKindSpan "Sequent")) c
 renderObjType (ProofTy c) =
     flip renderContextual c $
-      \(ProofType bt) -> metaKindSpan "Proof of " >> (renderBoxType bt)
+      \(ProofType bt) -> metaKindSpan "Proof of " >> (renderSequent bt)
 
 renderContextual :: (a -> Html) -> Open a -> Html
 renderContextual f (Open [] a) = f a
@@ -220,15 +220,15 @@ renderFormula phi = let (_, s) = go phi in s
       Disj p1 p2 -> showInfixOp (3, FixInfix AssocNone) (opSpan " ∨ ") (go p1) (go p2)
       Imp p1 p2  -> showInfixOp (1, FixInfix AssocRight) (opSpan " → ") (go p1) (go p2)
       Neg p'     -> showPrefixOp (4, FixPrefix) (opSpan "¬") (go p')
-      Pred q ts  -> showConst $ predSpan q >> termsListHtml ts
+      Pred q ts  -> showConst $ predSpan q >> objsListHtml ts
       Eq t1 t2   -> showConst $ renderTerm t1 >> predSpan " = " >> renderTerm t2
       All x phi' -> showPrefixOp (2, FixPrefix)
                                  (opSpan "∀" >> varSpan x >> fromString " ") (go phi')
       Exi x phi' -> showPrefixOp (2, FixPrefix)
                                  (opSpan "∃" >> varSpan x >> fromString " ") (go phi')
 
-termsListHtml :: [Term] -> Html
-termsListHtml ts = appList (map renderTerm ts)
+objsListHtml :: [Obj] -> Html
+objsListHtml ts = appList (map renderObj ts)
 
 -- Given a list [h1, ..., hn], renders nothing if n = 0 and otherwise renders
 -- the sequence enclosed in parameters and separated by commas.
@@ -237,17 +237,36 @@ appList [] = return ()
 appList hs =
   parSpan "(" >> sequence_ (intersperse (fromString ", ") hs) >> parSpan ")"
 
+renderObj :: Obj -> Html
+renderObj o =
+  case o of
+  ObjTerm    (Open bs t)   -> lam bs >> renderTerm t
+  ObjProp    (Open bs phi) -> lam bs >> renderFormula phi
+  ObjRef     (Open bs ref) -> lam bs >> renderRef ref
+  ObjSequent (Open bs sq)  -> lam bs >> renderSequent sq
+  ObjProof   (Open bs pt)  -> lam bs >> fromString "<proof term>"
+  where
+    lam [] = (return () :: Html)
+    lam bs = do _ <- fromString "λ"
+                let hs = map (fromString . maybe "_" id . bindVar) bs
+                sequence_ $ intersperse (fromString ", ") hs
+                fromString ". "
+
+renderRef :: Ref -> Html
+renderRef (RefApp x []) = fromString x
+renderRef (RefApp x args) = fromString x >> objsListHtml args
+
 renderTerm :: Term -> Html
 renderTerm (Var x) = varSpan x
-renderTerm (App f ts) = funcSpan f >> termsListHtml ts
+renderTerm (App f ts) = funcSpan f >> objsListHtml ts
 
-renderBoxType :: BoxType -> Html
-renderBoxType (BoxType [] (Left (x, ys))) =
+renderSequent :: Sequent -> Html
+renderSequent (Sequent [] (Left (x, ys))) =
   metaSpan " ⊢ " >> varSpan x >> appList (map varSpan ys)
-renderBoxType (BoxType [] (Right phi)) = metaSpan " ⊢ " >> renderFormula phi
-renderBoxType (BoxType as c) =
+renderSequent (Sequent [] (Right phi)) = metaSpan " ⊢ " >> renderFormula phi
+renderSequent (Sequent as c) =
   sequence_ (intersperse (fromString ", ") (map aux as))
-  >> renderBoxType (BoxType [] c)
+  >> renderSequent (Sequent [] c)
   where
     aux (Left x) = varSpan x >> fromString " : term"
     aux (Right phi) = renderFormula phi

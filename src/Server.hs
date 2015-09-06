@@ -103,8 +103,8 @@ checkHandler = do
                   "name" .= String (fromString n)
                 , "html" .= String (toStrict proofmarkup)
                 ]
-              | (n, _, m) <- defns
-              , let linearProof = linearize $ convertOpenProofTerm m
+              | (n, a, m) <- defns
+              , let linearProof = linearize $ convertOpenProofTerm a m
               , let proofmarkup = renderMarkup $ render linearProof
               ])
         ]
