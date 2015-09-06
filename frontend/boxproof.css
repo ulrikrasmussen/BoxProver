@@ -8,6 +8,10 @@ table.hypotheses td {
     vertical-align: top;
 }
 
+table.hypotheses tbody tr td:first-child {
+    text-align: right;
+}
+
 table.boxproof td {
     white-space: nowrap;
     padding-top: 2px;
@@ -62,10 +66,6 @@ table.boxproof {
 
 .exotic {
     border: 2px dashed magenta;
-}
-
-.context {
-    cursor: pointer;
 }
 
 .hole {
@@ -125,11 +125,16 @@ ul#tabButtons {
 #tabPanels div.tabContent {
     overflow: auto;
     margin:0;
-    padding-left: 8px;
-    font-family: 'Droid Serif', sans-serif;
+    padding-top: 1em;
+    padding-left: 1em;
+    font-family: 'Droid Serif', serif;
     font-weight: 400;
 }
 
 .hide {
     display: none;
+}
+
+.context-separator {
+    font-style: italic;
 }

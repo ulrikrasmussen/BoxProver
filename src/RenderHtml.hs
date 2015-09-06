@@ -49,10 +49,10 @@ holeSpan = H.span ! A.class_ "hole"
 
 render :: OpenLineProof -> Html
 render (OpenLineProof hyps frags) = do
+--  H.h1 $ fromString "Proof body"
+  renderFrags frags
   H.h1 $ fromString "Proof context"
   renderProofHypotheses hyps
-  H.h1 $ fromString "Proof body"
-  renderFrags frags
 
 parens :: Html -> Html
 parens h = parSpan "(" >> h >> parSpan ")"
@@ -160,28 +160,20 @@ renderObjType (PropTy c@(Open hyps PropConst))
     | otherwise = renderContextual (const (metaKindSpan "Proposition")) c
 renderObjType (RefTy c) =
     renderContextual
-      (\(RefType bt) -> metaKindSpan "Ref" >> parens (renderBoxType bt))
+      (\(RefType bt) -> metaKindSpan "Ref to " >> (renderBoxType bt))
       c
 renderObjType (BoxTy c) =
     renderContextual (const (metaKindSpan "Sequent")) c
 renderObjType (ProofTy c) =
     flip renderContextual c $
-      \(ProofType bt) -> metaKindSpan "Proof" >> parens (renderBoxType bt)
+      \(ProofType bt) -> metaKindSpan "Proof of " >> (renderBoxType bt)
 
 renderContextual :: (a -> Html) -> Open a -> Html
 renderContextual f (Open [] a) = f a
 renderContextual f (Open bindings a) = do
-  metaKindSpan "Ctx"
-  let bindingList = intersperse (fromString ", ") $ map renderBinding bindings
-  parens $ contextSpan $ sequence_ $ bindingList
-  _ <- fromString " "
   f a
-    where
-      renderBinding (HypBinding Nothing t) = renderObjType t
-      renderBinding (HypBinding (Just x) t) =
-          do varSpan x
-             _ <- fromString ": "
-             renderObjType t
+  H.div ! A.class_ "context-separator" $ "with context"
+  H.div ! A.class_ "context" $ renderProofHypotheses bindings
 
 type Precedence = Int
 data Fixity = FixPrefix | FixInfix Assoc | FixPostfix

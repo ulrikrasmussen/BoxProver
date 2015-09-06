@@ -157,6 +157,10 @@
         a.click();
         setTimeout( function() { document.body.removeChild(a) }, 1 );
     }
+
+    function onEnhanceClickHandler() {
+        optionalLocalStorageSetItem("enhance", enhanceCheckBox.prop('checked'));
+    }
     
     function onHSplitterMouseDownHandler() {
         function hideHWindows() {
@@ -198,11 +202,13 @@
                 output.scrollTop(output.prop("scrollHeight"));
                 prooftable.html('');
                 if (!response.check) {
-                    //playSound('trombone.wav');
+                    if (enhanceCheckBox.prop('checked'))
+                        playSound('trombone.wav');
                     return;
                 } else
                 {
-                    //playSound('coin.wav');
+                    if (enhanceCheckBox.prop('checked'))
+                        playSound('coin.wav');
                 }
                 var tabsList = $('<ul id="tabButtons">');
                 var contentDivs = $('<div id="tabPanels"></div>');
@@ -287,6 +293,7 @@
         shareButton  = $("#share");
         openButton   = $("#open");
         reportButton = $("#report");
+        enhanceCheckBox = $("#enhance");
         
         aceEditor = ace.edit("editor");
         aceEditor.setTheme("ace/theme/chrome");
@@ -311,6 +318,7 @@
         shareButton.click(onShareClickHandler);
         openButton.click(onOpenClickHandler);
         reportButton.click(onReportClickHandler);
+        enhanceCheckBox.click(onEnhanceClickHandler);
 
         query = getQueryParameters();
         if ("proof" in query)
@@ -322,6 +330,10 @@
                 aceEditor.getSession().setValue(proof);
         }
 
+        var enhance = optionalLocalStorageGetItem("enhance");
+        if (enhance == "true")
+            enhanceCheckBox.prop('checked', true);
+        
         aceEditor.getSession().on("change", function() {
             var proof = aceEditor.getSession().getValue();
             optionalLocalStorageSetItem("proof", proof);
