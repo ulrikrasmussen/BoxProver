@@ -7,26 +7,29 @@
     <script type="text/javascript" charset="utf-8" src="ace/src-min/ace.js"></script>
     <script type="text/javascript" charset="utf-8" src="frontend.js"></script>
     <link href='https://fonts.googleapis.com/css?family=Droid+Serif:400,700italic,400italic,700' rel='stylesheet' type='text/css' />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700"/>
     <link rel="stylesheet" type="text/css" href="frontend.css" />
     <link rel="stylesheet" type="text/css" href="boxproof.css" />
-    <style type="text/css">
-    </style>
+    <link rel="stylesheet" type="text/css" href="elusive-icons/css/elusive-icons.css" />
   </head>
   <body>
     <form id="control" style="position:absolute; top:0; left:0; right:0; height:45px;">
       <div id="logo">BoxProver</div>
       <ul>
         <li>
-          <button type="button" id="check" title="Check proof (you can also press Ctrl+Enter)">Check Proof</button>
+          <button type="button" id="check" title="Check proof (you can also press Ctrl+Enter)"><i class="el el-play"></i>Check Proof</button>
         </li>
         <li>
-          <button type="button" id="open" title="Open proof script file">Open file</button>
+          <button type="button" id="open" title="Open proof script file"><i class="el el-folder-open"></i>Open file</button>
         </li>
         <li>
-          <button type="button" id="save" title="Save proof script to file">Save as</button>
+          <button type="button" id="save" title="Save proof script to file"><i class="el el-download-alt"></i>Save as</button>
         </li>
         <li>
-          <button style="align:right" type="button" id="report" title="Report bug (send email">Report Bug</button>
+          <button type="button" id="share" title="Share proof script via URL"><i class="el el-share"></i>Share</button>
+        </li>
+        <li>
+          <button style="align:right" type="button" id="report" title="Report bug (send email"><i class="el el-exclamation-sign"></i>Report Bug</button>
         </li>
       </ul>
       <a href="http://twelf.org/"><img src="mediumelf.png" id="elf" /></a>

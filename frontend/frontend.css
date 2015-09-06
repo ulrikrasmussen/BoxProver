@@ -55,11 +55,16 @@ body {
     margin-right: 10px;
 }
 
+#control li .el {
+    margin-right: 5px;
+}
+
 #control button {
     border: none;
     height: 100%;
     cursor: pointer;
     margin: 0px 5px;
+    padding: 0px 10px;
     background-color: #3f6daa;
     color: #fff;
 }
@@ -72,10 +77,6 @@ body {
     background-color: white;
 }
 
-#editor {
-    font-size: 18px;
-}
-
 #vsplitter, #hsplitter {
     background-color: #aaa;
 }
@@ -85,6 +86,11 @@ body {
     overflow: auto;
     color: #333;
     background-color: #ffd;
+}
+
+#editor, #output {
+    font-family: Source Code Pro, monospace;
+    font-size: 12pt;
 }
 
 #prooftable {

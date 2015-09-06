@@ -77,6 +77,47 @@
         setTimeout( function() { document.body.removeChild(a) }, 1 );
     }
 
+    function onShareClickHandler() {
+        var proof = aceEditor.getSession().getValue();
+        var proofUrl = SERVER_URL + "/index.html?proof=" + encodeURIComponent(proof);
+        if (proofUrl.length > 5000) {
+            prooftable.html("<div style='padding: 10px;'>" +
+            "<p>Your proof script is unfortunately too long to be shared this way.</p>" +
+            "<p>Proof scripts are shared by encoding them as URLs, and the URL " +
+            "shortening service does not support URLs of more than " +
+            "<strong>5000</strong> characters. Your proof results in a URL " +
+            "of length <strong>" + proofUrl.length + "</strong> characters.</p>" +
+            "<p>Try shortening your proof script or "+
+            "use the <i>Save as</i> button.</p></div>");
+            return;
+        }
+        prooftable.html("<div style='padding:10px;'><p id='short-url-p'>Short URL: </p></div>");
+        var link = document.createElement("a");
+        link.href = link.textContent = proofUrl;
+        prooftable.find('#short-url-p').append(link);
+
+        $.ajax(
+            { url: "https://is.gd/create.php?format=json&url="
+                   + encodeURIComponent(proofUrl),
+              method: "GET",
+              dataType: "json",
+              timeout: 8000
+            })
+            .success(function(response) {
+                if ("shorturl" in response)
+                    link.href = link.textContent = response.shorturl;
+                if ("errormessage" in response)
+                    prooftable.append("<p style='color:red;'>URL shortening service "
+                                      + "reported an error: " + response.errormessage
+                                     + "</p>");
+            })
+            .fail(function(xhr, textStatus, errorThrown) {
+                prooftable.append("<p style='color:red;'>Something went wrong. "
+                                  + "Shortened URL not available: "
+                                  + textStatus + "</p>");
+            });
+    }
+
     function onOpenClickHandler() {
         var fileElem = document.createElement('input');
         fileElem.style.cssText = "visibility:hidden;";
@@ -204,7 +245,35 @@
             })
             .always(function() { checkRequest = null; });
     }
-    
+
+    function optionalLocalStorageGetItem(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch(e) {
+            return null;
+        }
+    }
+
+    function optionalLocalStorageSetItem(key, value) {
+        try {
+            window.localStorage.setItem(key, value);
+        } catch(e) {
+            // ignore
+        }
+    }
+
+    function getQueryParameters() {
+        var a = window.location.search.substr(1).split('&');
+        if (a === "") return {};
+        var b = {};
+        for (var i = 0; i < a.length; i++) {
+            var p = a[i].split('=');
+            if (p.length != 2) continue;
+            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+        }
+        return b;
+    }
+
     $().ready(function() {
         main         = $("#main");
         editor       = $("#editor");
@@ -215,6 +284,7 @@
         prooftable   = $("#prooftable");
         checkButton  = $("#check");
         saveButton   = $("#save");
+        shareButton  = $("#share");
         openButton   = $("#open");
         reportButton = $("#report");
         
@@ -238,7 +308,23 @@
         hsplitter.mousedown(onHSplitterMouseDownHandler);
         checkButton.click(onCheckClickHandler);
         saveButton.click(onSaveClickHandler);
+        shareButton.click(onShareClickHandler);
         openButton.click(onOpenClickHandler);
         reportButton.click(onReportClickHandler);
+
+        query = getQueryParameters();
+        if ("proof" in query)
+        {
+            aceEditor.getSession().setValue(query.proof);
+        } else {
+            var proof = optionalLocalStorageGetItem("proof");
+            if (proof !== null)
+                aceEditor.getSession().setValue(proof);
+        }
+
+        aceEditor.getSession().on("change", function() {
+            var proof = aceEditor.getSession().getValue();
+            optionalLocalStorageSetItem("proof", proof);
+        });
     });
 })();
