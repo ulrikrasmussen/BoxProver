@@ -215,7 +215,11 @@
             return;
         } else
         {
-            if (enhanceCheckBox.prop('checked'))
+            var allClosed = true;
+            $.each(response.prooftables, function(i, table) {
+                allClosed = allClosed && table.closed;
+            });
+            if (enhanceCheckBox.prop('checked') && allClosed)
                 playSound('coin.wav');
         }
         var tabsList = $('<ul id="tabButtons">');
@@ -224,8 +228,16 @@
         if (!($.inArray(activeTabName, allNames) >= 0))
             activeTabName = null;
         $.each(response.prooftables, function(i, table){
-            var tab = $('<li><a>' + table.name + '</a></li>');
-            var content = $('<div>' + table.html + '</div>');
+            var closedIndicator =
+                table.closed ? '<i class="el el-ok closed-indicator"></i>'
+                             : '<i class="el el-question open-indicator"></i>';
+            var tab = $('<li><a>' + closedIndicator + table.name + '</a></li>');
+            var content = $('<div></div>');
+            if (table.closed)
+                content.append("<p style='float:right;' class='closed-indicator'>Proof is closed!</p>");
+            else
+                content.append("<p style='float:right;' class='open-indicator'>Proof still has holes.</p>");
+            content.append(table.html);
             content.addClass("tabContent");
 
             content.find("div.context-separator").each(function(i,sep) {

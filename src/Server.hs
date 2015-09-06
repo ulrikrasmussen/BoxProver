@@ -102,6 +102,7 @@ checkHandler = do
               [ object [
                   "name" .= String (fromString n)
                 , "html" .= String (toStrict proofmarkup)
+                , "closed" .= Bool (isClosedProof linearProof)
                 ]
               | (n, a, m) <- defns
               , let linearProof = linearize $ convertOpenProofTerm a m

@@ -116,6 +116,22 @@ isClosedPropTy :: ObjType -> Bool
 isClosedPropTy (PropTy (Open [] PropConst)) = True
 isClosedPropTy _ = False
 
+isExoticTermTy :: ObjType -> Bool
+isExoticTermTy (TermTy (Open termHyps TermConst)) =
+               any (not . isClosedTermTy . bindTy) termHyps
+isExoticTermTy _ = False
+
+isExoticPropTy :: ObjType -> Bool
+isExoticPropTy (PropTy (Open propHyps PropConst)) =
+               any (not . isClosedTermTy . bindTy) propHyps
+isExoticPropTy _ = False
+
+isHoleTy :: ObjType -> Bool
+isHoleTy (RefTy _) = True
+isHoleTy (SequentTy _) = True
+isHoleTy (ProofTy _) = True
+isHoleTy _ = False
+               
 -- | Given a type of the form
 --     term -> term -> ... -> term,
 --   returns the number of "term" occurrences in negative position.

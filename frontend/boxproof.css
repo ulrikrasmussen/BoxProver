@@ -122,11 +122,28 @@ ul#tabButtons {
     background-color: #5886C4;
 }
 
+#tabButtons li a i {
+    margin-right: 5px;
+}
+
+.open-indicator {
+    font-family: sans-serif;
+    font-weight: bold;
+    color: red;
+}
+
+.closed-indicator {
+    font-family: sans-serif;
+    font-weight: bold;
+    color: green;
+}
+
 #tabPanels div.tabContent {
     overflow: auto;
     margin:0;
     padding-top: 1em;
     padding-left: 1em;
+    padding-right: 1em;
     font-family: 'Droid Serif', serif;
     font-weight: 400;
 }

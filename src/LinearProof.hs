@@ -24,6 +24,21 @@ data ProofFragment
 data OpenLineProof = OpenLineProof [HypBinding] [ProofFragment]
   deriving (Eq, Ord, Show)
 
+isClosedProof :: OpenLineProof -> Bool
+isClosedProof (OpenLineProof bs frags) =
+  and [all isClosedTermOrPropHyp bs
+      ,all isClosedFragment frags]
+  where
+    isClosedTermOrPropHyp (HypBinding _ typ) = isClosedTermTy typ || isClosedPropTy typ
+    isClosedFragment frag =
+      case frag of
+      Line _ _ _ refs -> all isClosedRef refs
+      HoleLine _ _ _ _ -> False
+      Box _ _ frags' -> all isClosedFragment frags'
+      _ -> True
+    isClosedRef (LineRefHole _) = False
+    isClosedRef _ = True
+
 depth :: [ProofFragment] -> Int
 depth = foldr max 0 . map aux
   where

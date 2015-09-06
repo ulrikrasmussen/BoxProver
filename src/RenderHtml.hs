@@ -132,16 +132,6 @@ renderProofHypotheses hyps =
                              ++ "is not a valid first-order object.")
         | isHoleTy typ = holeSpan
         | otherwise = id
-    isExoticTermTy (TermTy (Open termHyps TermConst)) =
-                   any (not . isClosedTermTy . bindTy) termHyps
-    isExoticTermTy _ = False
-    isExoticPropTy (PropTy (Open propHyps PropConst)) =
-                   any (not . isClosedTermTy . bindTy) propHyps
-    isExoticPropTy _ = False
-    isHoleTy (RefTy _) = True
-    isHoleTy (SequentTy _) = True
-    isHoleTy (ProofTy _) = True
-    isHoleTy _ = False
 
 renderObjType :: ObjType -> Html
 renderObjType (TermTy c@(Open hyps TermConst))

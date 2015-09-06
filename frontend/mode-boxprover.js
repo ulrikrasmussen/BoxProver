@@ -37,7 +37,7 @@ var BoxProverHighlightRules = function(textClass) {
                 regex : "(?:==|=>|\\\\/|/\\\\|~)"
             }, {
                 token : "keyword",
-                regex : "(?:proof|ref|,,,|\\$)"
+                regex : "(?:proof|ref|,,,|prop|term|\\$)"
             }, {
                token : "paren.keyword.operator",
 	            regex : "[[({]"
@@ -46,7 +46,7 @@ var BoxProverHighlightRules = function(textClass) {
 	           regex : "[\\])}]"
 	        }, {
                 token : "variable.parameter",
-                regex : "[a-z][a-zA-Z0-9_]*"
+                regex : "[a-z][a-zA-Z0-9_+-]*"
             } , {
                 token : "variable.other",
                 regex : "[A-Z_][a-zA-Z0-9_]*"
