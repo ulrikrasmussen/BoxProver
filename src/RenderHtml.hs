@@ -35,9 +35,6 @@ opSpan = (H.span ! A.class_ "op") . fromString
 predSpan :: String -> Html
 predSpan = (H.span ! A.class_ "pred") . fromString
 
-funcSpan :: String -> Html
-funcSpan = (H.span ! A.class_ "func") . fromString
-
 contextSpan :: Html -> Html
 contextSpan = H.span ! A.class_ "context"
 
@@ -93,7 +90,7 @@ renderFrags frags =
          VarIntroduction l x -> line l (show l) x "" (renderReference "var" [])
          Line l sq rule refs ->
            line l (show l) "" (renderSequent sq) (renderReference rule refs)
-         HoleLine l (ProofType bt) h args ->
+         HoleLine l (ProofType bt) h _args ->
            line l (show l) "" (holeSpan $ renderSequent bt) (holeSpan $ fromString h)
          Box l1 l2 frags' ->
            let open' = S.insert l1 open
@@ -109,13 +106,14 @@ renderReference rule refs = do
                   , ("all_i","∀i"), ("all_e","∀e"), ("exi_i","∃i"), ("exi_e","∃e")
                   , ("eq_i","=i"), ("eq_e","=e"), ("lem", "LEM"), ("nne", "¬¬e")
                   ]) ++ [("var", termIntroSpan "variable")]
-  let renderRef r = case r of
-                    LineRefSingle l' -> fromString $ show l'
-                    LineRefMulti l1 l2 -> fromString $ concat [show l1, "-", show l2]
-                    LineRefHole h -> holeSpan $ fromString $ concat ["(",h,")"]
+  let renderLineRef r =
+        case r of
+        LineRefSingle l' -> fromString $ show l'
+        LineRefMulti l1 l2 -> fromString $ concat [show l1, "-", show l2]
+        LineRefHole h -> holeSpan $ fromString $ concat ["(",h,")"]
   _ <- (maybe (fromString rule) id (lookup rule ruleTable))
   _ <- fromString " "
-  sequence_ (intersperse (fromString ", ") $ map renderRef refs)
+  sequence_ (intersperse (fromString ", ") $ map renderLineRef refs)
 
 renderProofHypotheses :: [HypBinding] -> Html
 renderProofHypotheses hyps =
@@ -244,7 +242,7 @@ renderObj o =
   ObjProp    (Open bs phi) -> lam bs >> renderFormula phi
   ObjRef     (Open bs ref) -> lam bs >> renderRef ref
   ObjSequent (Open bs sq)  -> lam bs >> renderSequent sq
-  ObjProof   (Open bs pt)  -> lam bs >> fromString "<proof term>"
+  ObjProof   (Open bs _pt)  -> lam bs >> fromString "<proof term>"
   where
     lam [] = (return () :: Html)
     lam bs = do _ <- fromString "λ"
@@ -253,29 +251,21 @@ renderObj o =
                 fromString ". "
 
 renderRef :: Ref -> Html
-renderRef (RefApp x []) = fromString x
-renderRef (RefApp x args) = fromString x >> objsListHtml args
+renderRef (RefApp x []) = varSpan x
+renderRef (RefApp x args) = varSpan x >> objsListHtml args
 
 renderTerm :: Term -> Html
 renderTerm (Var x) = varSpan x
-renderTerm (App f ts) = funcSpan f >> objsListHtml ts
+renderTerm (App f ts) = varSpan f >> objsListHtml ts
 
 renderSequent :: Sequent -> Html
-renderSequent (Sequent [] (Left (x, ys))) =
-  metaSpan " ⊢ " >> varSpan x >> appList (map varSpan ys)
-renderSequent (Sequent [] (Right phi)) = metaSpan " ⊢ " >> renderFormula phi
+renderSequent (Sequent [] (Left (x, ys))) = varSpan x >> appList (map varSpan ys)
+renderSequent (Sequent [] (Right phi)) = renderFormula phi
 renderSequent (Sequent as c) =
   sequence_ (intersperse (fromString ", ") (map aux as))
-  >> renderSequent (Sequent [] c)
+  >> case c of
+     Left (x,ys) -> fromString "|" >> varSpan x >> appList (map varSpan ys)
+     Right phi -> fromString " ⊢ " >> renderFormula phi
   where
-    aux (Left x) = varSpan x >> fromString " : term"
+    aux (Left x) = varSpan x >> fromString ":" >> metaKindSpan "Term"
     aux (Right phi) = renderFormula phi
-
-form1 :: Formula
-form1 = (Pred "p" [] `Conj` Pred "q" []) `Imp` (Pred "q" [] `Imp` (Neg (Neg (Pred "p" []))))
-
-form2 :: Formula
-form2 = Neg (form1 `Imp` Top)
-
-form3 :: Formula
-form3 = (Pred "p" []) `Conj` (Pred "q" []) `Conj` (Pred "r" [])

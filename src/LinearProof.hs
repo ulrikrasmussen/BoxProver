@@ -112,64 +112,64 @@ linearize' pt sq =
                        LineRefMulti lfrom1 lto1
     (frags2, span') <- linearize' pt' sq2
     return $ (frags1 ++ frags2, span')
-  Copy phi ref1 -> do
+  Copy _phi ref1 -> do
     l1 <- getRef ref1
     singleLine sq "copy" [l1]
   TopI -> singleLine sq "top_i" []
-  ConI phiA phiB refA refB -> do
+  ConI _phiA _phiB refA refB -> do
     lA <- getRef refA
     lB <- getRef refB
     singleLine sq "con_i" [lA, lB]
-  ConE1 phiA _phiB ref -> do
+  ConE1 _phiA _phiB ref -> do
     l <- getRef ref
     singleLine sq "con_e1" [l]
-  ConE2 _phiA phiB ref -> do
+  ConE2 _phiA _phiB ref -> do
     l <- getRef ref
     singleLine sq "con_e2" [l]
-  DisE _phiA _phiB phiC ref1 ref2 ref3 -> do
+  DisE _phiA _phiB _phiC ref1 ref2 ref3 -> do
     l1 <- getRef ref1
     l2 <- getRef ref2
     l3 <- getRef ref3
     singleLine sq "dis_e" [l1, l2, l3]
-  DisI1 phiA phiB ref -> do
+  DisI1 _phiA _phiB ref -> do
     l <- getRef ref
     singleLine sq "dis_i1" [l]
-  DisI2 phiA phiB ref -> do
+  DisI2 _phiA _phiB ref -> do
     l <- getRef ref
     singleLine sq "dis_i2" [l]
-  ImpI phiA phiB ref -> do
+  ImpI _phiA _phiB ref -> do
     l <- getRef ref
     singleLine sq "imp_i" [l]
-  ImpE _phiA phiB ref1 ref2 -> do
+  ImpE _phiA _phiB ref1 ref2 -> do
     ls <- mapM getRef [ref1, ref2]
     singleLine sq "imp_e" ls
-  NegI phiA ref -> do
+  NegI _phiA ref -> do
     l <- getRef ref
     singleLine sq "neg_i" [l]
   NegE _phiA ref1 ref2 -> do
     ls <- mapM getRef [ref1, ref2]
     singleLine sq "neg_e" ls
-  BotE phiA ref -> do
+  BotE _phiA ref -> do
     l <- getRef ref
     singleLine sq "bot_e" [l]
-  AllI mx phiA ref -> do
+  AllI _mx _phiA ref -> do
     l <- getRef ref
     singleLine sq "all_i" [l]
-  AllE mx phiA t ref -> do
+  AllE _mx _phiA _t ref -> do
     l <- getRef ref
     singleLine sq "all_e" [l]
-  ExiI mx phiA _t ref -> do
+  ExiI _mx _phiA _t ref -> do
     l <- getRef ref
     singleLine sq "exi_i" [l]
-  ExiE _mx _phiA phiB ref1 ref2 -> do
+  ExiE _mx _phiA _phiB ref1 ref2 -> do
     ls <- mapM getRef [ref1, ref2]
     singleLine sq "exi_e" ls
-  EqI t -> singleLine sq "eq_i" []
-  EqE _s t mx phiA ref1 ref2 -> do
+  EqI _t -> singleLine sq "eq_i" []
+  EqE _s _t _mx _phiA ref1 ref2 -> do
     ls <- mapM getRef [ref1, ref2]
     singleLine sq "eq_e" ls
-  LEM phiA -> singleLine sq "lem" []
-  NNE phiA ref -> do
+  LEM _phiA -> singleLine sq "lem" []
+  NNE _phiA ref -> do
     l <- getRef ref
     singleLine sq "nne" [l]
   Hole proofType x args -> do
