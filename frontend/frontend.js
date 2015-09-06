@@ -13,6 +13,11 @@
 
     var hpos; // Position of horizontal splitter
     var vpos; // Position of vertical splitter
+
+    function playSound(sound) {
+        var audio = new Audio(sound);
+        audio.play();
+    }
     
     function updateLayout() {
         var w = main.width();
@@ -151,17 +156,24 @@
                 output.html('<pre><samp>' + response.output + '</samp></pre>');
                 output.scrollTop(output.prop("scrollHeight"));
                 prooftable.html('');
-                if (!response.check) return;
+                if (!response.check) {
+                    //playSound('trombone.wav');
+                    return;
+                } else
+                {
+                    //playSound('coin.wav');
+                }
                 var tabsList = $('<ul id="tabButtons">');
                 var contentDivs = $('<div id="tabPanels"></div>');
-                if (!(activeTabName in response.prooftables))
+                var allNames = $.map(response.prooftables, function(o) { return o.name; });
+                if (!($.inArray(activeTabName, allNames) >= 0))
                     activeTabName = null;
-                $.each(response.prooftables, function(name, proofHtml){
-                    var tab = $('<li><a>' + name + '</a></li>');
-                    var content = $('<div>' + proofHtml + '</div>');
+                $.each(response.prooftables, function(i, table){
+                    var tab = $('<li><a>' + table.name + '</a></li>');
+                    var content = $('<div>' + table.html + '</div>');
                     content.addClass("tabContent");
-                    activeTabName = activeTabName || name;
-                    if (name === activeTabName) {
+                    activeTabName = activeTabName || table.name;
+                    if (table.name === activeTabName) {
                         tab.addClass("active");
                     }
                     else
@@ -178,7 +190,7 @@
                             theContent.removeClass("hide");
                             activeTabName = theName;
                         };
-                    })(tab, content, name));
+                    })(tab, content, table.name));
                     
                     tabsList.append(tab);
                     contentDivs.append(content);

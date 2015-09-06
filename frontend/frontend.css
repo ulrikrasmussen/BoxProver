@@ -22,7 +22,7 @@ body {
 #control {
     margin:0px;
     background-color: #4679bd;
-    border-bottom: 4px solid #aaa;
+    border-bottom: 4px solid #7EA1D1;
 }
 
 #control ul {
@@ -81,8 +81,10 @@ body {
 }
 
 #output {
-    margin-left: 8px;
+    padding-left: 8px;
     overflow: auto;
+    color: #333;
+    background-color: #ffd;
 }
 
 #prooftable {

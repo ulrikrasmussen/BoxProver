@@ -10,6 +10,7 @@ import qualified Data.ByteString.Lazy as BL
 import           Data.Maybe (isJust, fromJust)
 import           Data.String (fromString)
 import           Data.Text.Lazy (toStrict)
+import qualified Data.Vector as V
 import           Snap.Core
 import           Snap.Http.Server
 import           Snap.Util.FileServe
@@ -97,8 +98,13 @@ checkHandler = do
         [ "check" .= Bool True
         , "output" .= String (fromString resp)
         , "prooftables" .=
-            object [ fromString n .= String (toStrict proofmarkup)
-                   | (n, _, m) <- defns
-                   , let linearProof = linearize $ convertOpenProofTerm m
-                   , let proofmarkup = renderMarkup $ render linearProof ]
+            (Array $ V.fromList
+              [ object [
+                  "name" .= String (fromString n)
+                , "html" .= String (toStrict proofmarkup)
+                ]
+              | (n, _, m) <- defns
+              , let linearProof = linearize $ convertOpenProofTerm m
+              , let proofmarkup = renderMarkup $ render linearProof
+              ])
         ]
