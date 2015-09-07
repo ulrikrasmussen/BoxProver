@@ -13,7 +13,7 @@ var BoxProverHighlightRules = function(textClass) {
 	            regex : "%\ .*$"
 	        }, {
                 token : "keyword",
-                regex : "\\b(?:assumption;)(?![a-zA-Z0-9_])"
+                regex : "\\b(?:assumption;|premise;)(?![a-zA-Z0-9_])"
             }, {
                 token : "support.function.directive",
                 regex : "%abbrev"

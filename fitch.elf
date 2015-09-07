@@ -30,7 +30,7 @@ assumption; : {Phi} (ref (|- Phi) -> proof S) -> proof (Phi , S). %infix right 4
 ; : proof S -> (ref S -> proof T) -> proof T. %infix right 3 ;.
 
 %abbrev
-premise; = [x][y] x assumption; y. %infix right 4 premise;.
+premise; : {Phi} (ref (|- Phi) -> proof S) -> proof (Phi , S) = [x][y] x assumption; y. %infix right 4 premise;.
 
 copy : ref (|- Phi) -> proof (|- Phi).
 top_i : proof (|- top).
