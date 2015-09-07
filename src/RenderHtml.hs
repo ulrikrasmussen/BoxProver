@@ -53,7 +53,7 @@ render l@(OpenLineProof hyps frags) = do
      pclosed ! A.class_ "open-indicator" $
        "Proof contains holes and/or higher-order objects."
   renderFrags frags
-  H.h1 $ fromString "Proof context"
+  H.h2 $ fromString "Proof context"
   renderProofHypotheses hyps
 
 parens :: Html -> Html

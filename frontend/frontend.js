@@ -8,6 +8,7 @@
     var left;
     var output;
     var prooftable;
+    var prooftableData;
 
     var hpos; // Position of horizontal splitter
     var vpos; // Position of vertical splitter
@@ -135,6 +136,23 @@
         setTimeout( function() { document.body.removeChild(fileElem); }, 1 );
     }
 
+    function onPrintClickHandler() {
+        var w = window.open("print.html");
+        w.onload = function() {
+            var main = $(w.document.body).find("#prooftable");
+            if (prooftableData !== null
+                && prooftableData.prooftables !== null) {
+                $.each(prooftableData.prooftables, function(i, table) {
+                    main.append('<h1>' + table.name
+                                + ' : <span class="sequent">'
+                                + table.sequent
+                                + '</span></h1>');
+                    main.append(table.html);
+                });
+            }
+        };
+    }
+    
     function onCheckClickHandler() {
         checkProof();
     }
@@ -204,6 +222,7 @@
     }
 
     function handleCheckResponse(response) {
+        prooftableData = response;
         output.html('<pre><samp>' + response.output + '</samp></pre>');
         output.scrollTop(output.prop("scrollHeight"));
         prooftable.html('');
@@ -231,6 +250,8 @@
                              : '<i class="el el-question open-indicator"></i>';
             var tab = $('<li><a>' + closedIndicator + table.name + '</a></li>');
             var content = $('<div></div>');
+            content.append('<div class="sequent">'
+                           + table.sequent + '</div>');
             content.append(table.html);
             content.addClass("tabContent");
 
@@ -260,7 +281,7 @@
             tab.click((function(theTab, theContent, theName) {
                 return function() {
                     $("#tabButtons li.active").addClass("inactive").removeClass("active");
-                    $("#tabPanels div").addClass("hide");
+                    $("#tabPanels > div").addClass("hide");
                     theTab.removeClass("inactive").addClass("active");
                     theContent.removeClass("hide");
                     activeTabName = theName;
@@ -316,6 +337,7 @@
         openButton   = $("#open");
         reportButton = $("#report");
         helpButton   = $("#help");
+        printButton  = $("#print");
         enhanceCheckBox = $("#enhance");
         
         aceEditor = ace.edit("editor");
@@ -341,6 +363,7 @@
         shareButton.click(onShareClickHandler);
         openButton.click(onOpenClickHandler);
         reportButton.click(onReportClickHandler);
+        printButton.click(onPrintClickHandler);
         helpButton.click(function() { window.open("help.html");  });
         enhanceCheckBox.click(onEnhanceClickHandler);
 

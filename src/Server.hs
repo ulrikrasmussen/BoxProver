@@ -101,11 +101,14 @@ checkHandler = do
             (Array $ V.fromList
               [ object [
                   "name" .= String (fromString n)
+                , "sequent" .= String (toStrict sequentmarkup)
                 , "html" .= String (toStrict proofmarkup)
                 , "closed" .= Bool (isClosedProof linearProof)
                 ]
               | (n, a, m) <- defns
-              , let linearProof = linearize $ convertOpenProofTerm a m
+              , let opt@(Open _ (_, sq)) = convertOpenProofTerm a m
+              , let sequentmarkup = renderMarkup $ renderSequent sq
+              , let linearProof = linearize $ opt
               , let proofmarkup = renderMarkup $ render linearProof
               ])
         ]
