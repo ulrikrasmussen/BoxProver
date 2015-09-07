@@ -28,7 +28,7 @@ var BoxProverHighlightRules = function(textClass) {
                 regex : ";(?![a-zA-Z0-9_])"
             }, {
                 token : "support.constant",
-                regex : "(?:lem|nne|top\_i|bot\_e|con\_i|con\_e1|con\_e2|dis\_i1|dis\_i2|dis\_e|imp\_i|imp\_e|neg\_e|neg\_i|all\_i|all\_e|exi\_i|exi\_e|eq\_i|eq\_e)(?!;)\\b"
+                regex : "(?:lem|nne|copy|top\_i|bot\_e|con\_i|con\_e1|con\_e2|dis\_i1|dis\_i2|dis\_e|imp\_i|imp\_e|neg\_e|neg\_i|all\_i|all\_e|exi\_i|exi\_e|eq\_i|eq\_e)(?!;)\\b"
             }, {
                 token : "keyword.operator",
                 regex : "\\b(?:exi|all|top|bot)\\b"
@@ -46,10 +46,10 @@ var BoxProverHighlightRules = function(textClass) {
 	           regex : "[\\])}]"
 	        }, {
                 token : "variable.parameter",
-                regex : "[a-z][a-zA-Z0-9_+-]*"
+                regex : "[a-z@?#][-a-zA-Z0-9_!'\"#¤&/=?@£$+><]*"
             } , {
                 token : "variable.other",
-                regex : "[A-Z_][a-zA-Z0-9_]*"
+                regex : "[A-Z_][-a-zA-Z0-9_!'\"#¤&/=?@£$+]*"
             }
         ]
     };
