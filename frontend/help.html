@@ -127,7 +127,7 @@
           <td>
 <pre>%abbrev
 ex1-6 : {p}{q}{r}{s}{t}
-        proof ((p /\ q) /\ r ,,, s /\ t ,,, q /\ s $) =
+        proof ((p /\ q) /\ r , s /\ t , |- q /\ s) =
 [p][q][r][s][t]
 (p /\ q) /\ r       assumption;    [l1]
 s /\ t              assumption;    [l2]
@@ -148,7 +148,7 @@ q /\ s              by con_i l4 l5
         The <code>%abbrev</code> declaration on the first line is required by Twelf and is unrelated to the proof that we are formalizing. It changes the way Twelf does type-checking and is required when we want to develop proofs in a more interactive fashion. For this particular example we can actually remove it, but since it never results in an error to include it, it is safest just to keep it in all your proofs.
       </p>
       <p>
-        The formal proof language require that we explicitly write down the sequent that we want to prove as well as the names of all propositions that we will be referring to. This information is provided in the preamble in lines 2-4. Line 2 defines the name of our proof to be <code>ex1-6</code> and defines the names <code>p, q, r, s, t</code> as propositions such that they can be used in the statement of the proof sequent in Line 3. Each name must be put in curly braces, and BoxProver figures out by itself that each name stands for a proposition based on how it is used. A more verbose, but equivalent, way to express the same would be by the line <pre style="text-align: center;">{p:prop}{q:prop}{r:prop}{s:prop}{t:prop}</pre> Line 3 defines the proof <i>type</i> using the operator <code>proof</code> followed by an encoding of the sequent <center style="margin:1em;"><i>(p ∧ q) ∧ r , s ∧ t ⊢ q ∧ s.</i></center> This is encoded as a list of formulas separated by <code>,,,</code> and terminated by <code>$</code>. The last formula is the conclusion, and all previous formulas make up the premises.</p>
+        The formal proof language require that we explicitly write down the sequent that we want to prove as well as the names of all propositions that we will be referring to. This information is provided in the preamble in lines 2-4. Line 2 defines the name of our proof to be <code>ex1-6</code> and defines the names <code>p, q, r, s, t</code> as propositions such that they can be used in the statement of the proof sequent in Line 3. Each name must be put in curly braces, and BoxProver figures out by itself that each name stands for a proposition based on how it is used. A more verbose, but equivalent, way to express the same would be by the line <pre style="text-align: center;">{p:prop}{q:prop}{r:prop}{s:prop}{t:prop}</pre> Line 3 defines the proof <i>type</i> using the operator <code>proof</code> followed by an encoding of the sequent <center style="margin:1em;"><i>(p ∧ q) ∧ r , s ∧ t ⊢ q ∧ s.</i></center> This is encoded as a list of formulas separated by <code>,</code> with the last formula (the conclusion) prefixed by <code>|-</code>. The last formula is the conclusion, and all previous formulas make up the premises.</p>
       <p>
         The sequent is followed by an equals sign which marks the beginning of the proof body. The first thing we must do in the proof body is to repeat the declarations of the propositions that we intend to use, but this time enclosed in square brackets instead of curly braces. Then follows the actual proof body which is terminated by a single dot (<code>.</code>).
       </p>
@@ -174,7 +174,7 @@ q /\ s              by con_i l4 l5
 <pre>%abbrev
 ex1-14 : {p}{q}{r}
   proof (p => (q => r)
-        ,,, p /\ q => r $) =
+        , |- p /\ q => r) =
 [p][q][r]
 p => (q => r)   assumption; [l1]
 (   p /\ q      assumption; [l2]
@@ -203,15 +203,15 @@ p /\ q => r     by imp_i l2-6.
 <pre>%abbrev
 ex1-14 : {p}{q}{r}
   proof (p => (q => r)
-        ,,, p /\ q => r $) =
+        , |- p /\ q => r) =
 [p][q][r]
-p => (q => r)   assumption;      [l1:ref (p => (q => r) $)]
-(   p /\ q      assumption;      [l2:ref (p /\ q $)]
-    p           by con_e1 l2 ;   [l3:ref (p $)]
-    q           by con_e2 l2 ;   [l4:ref (q $)]
-    q => r      by imp_e l3 l1 ; [l5:ref (q => r $)]
+p => (q => r)   assumption;      [l1:ref (|- p => (q => r))]
+(   p /\ q      assumption;      [l2:ref (|- p /\ q)]
+    p           by con_e1 l2 ;   [l3:ref (|- p)]
+    q           by con_e2 l2 ;   [l4:ref (|- q)]
+    q => r      by imp_e l3 l1 ; [l5:ref (|- q => r)]
     r           by imp_e l4 l5
-)               ;                [l2-6 : ref (p /\ q ,,, r $)]
+)               ;                [l2-6 : ref (p /\ q , |- r)]
 p /\ q => r     by imp_i l2-6.
 </pre>
           </td>
@@ -219,7 +219,7 @@ p /\ q => r     by imp_i l2-6.
         </tr>
       </table>
       <p>
-        Note that every reference is typed by a <i>sequent</i> which for every single-line reference has no premises, and which for the "box" reference has a single premise and a single conclusion. That is, the annotation <code>l2-6 : ref (p /\ q ,,, r $)</code> indicates that lines 2 to 6 is a proof of the sequent <i>p ∧ q ⊢ r</i>.
+        Note that every reference is typed by a <i>sequent</i> which for every single-line reference has no premises, and which for the "box" reference has a single premise and a single conclusion. That is, the annotation <code>l2-6 : ref (p /\ q , |- r)</code> indicates that lines 2 to 6 is a proof of the sequent <i>p ∧ q ⊢ r</i>.
       </p>
       
       <h2>Rule reference</h2>
@@ -235,21 +235,21 @@ p /\ q => r     by imp_i l2-6.
           <td><span class="bprule">top_i</span></td>
           <td>
 <pre>
-ex : proof (top $) =
+ex : proof (|- top) =
 top by top_i.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">⊥e</span></td>
           <td><span class="bprule">bot_e</span></td>
           <td>
 <pre>
-ex : {p} proof (bot ,,, p /\ ~ p $) = [p]
+ex : {p} proof (bot , |- p /\ ~ p) = [p]
 bot       assumption; [l0]
 p /\ ~ p  by bot_e l0.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">∧i</span></td>
           <td><span class="bprule">con_i</span></td><td>
 <pre>
-ex : {p}{q} proof (p ,,, q ,,, p /\ q $) = [p][q]
+ex : {p}{q} proof (p , q , |- p /\ q) = [p][q]
 p      assumption; [l0]
 q      assumption; [l1]
 p /\ q by con_i l0 l1.
@@ -257,14 +257,14 @@ p /\ q by con_i l0 l1.
         <tr><td><span class="hrrule">∧e₁</span></td>
           <td><span class="bprule">con_e1</span></td><td>
 <pre>
-ex : {p}{q} proof (p /\ q ,,, p $) = [p][q]
+ex : {p}{q} proof (p /\ q , |- p) = [p][q]
 p /\ q assumption; [l0]
 p      by con_e1 l0.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">∧e₂</span></td>
           <td><span class="bprule">con_e2</span></td><td>
 <pre>
-ex : {p}{q} proof (p /\ q ,,, q $) = [p][q]
+ex : {p}{q} proof (p /\ q , |- q) = [p][q]
 p /\ q assumption; [l0]
 q      by con_e2 l0.
 </pre>
@@ -272,21 +272,21 @@ q      by con_e2 l0.
         <tr><td><span class="hrrule">∨i₁</span></td>
           <td><span class="bprule">dis_i1</span></td><td>
 <pre>
-ex : {p}{q} proof (p ,,, p \/ q $) = [p][q]
+ex : {p}{q} proof (p , |- p \/ q) = [p][q]
 p      assumption; [l0]
 p \/ q by dis_i1 l0.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">∨i₂</span></td>
           <td><span class="bprule">dis_i2</span></td><td>
 <pre>
-ex : {p}{q} proof (q ,,, p \/ q $) = [p][q]
+ex : {p}{q} proof (q , |- p \/ q) = [p][q]
 q      assumption; [l0]
 p \/ q by dis_i2 l0.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">∨e</span></td>
           <td><span class="bprule">dis_e</span></td><td>
 <pre>
-ex : {p}{q} proof (p \/ q ,,, q \/ p $) = [p][q]
+ex : {p}{q} proof (p \/ q , |- q \/ p) = [p][q]
 p \/ q    assumption; [l0]
 (  p      assumption; [l1]
    q \/ p by dis_i2 l1
@@ -299,7 +299,7 @@ q \/ p    by dis_e l0 case1 case2.
         <tr><td><span class="hrrule">→i</span></td>
           <td><span class="bprule">imp_i</span></td><td>
 <pre>
-ex : {p} proof (p => p $) = [p]
+ex : {p} proof (|- p => p) = [p]
 (  p    assumption; [l0]
    p    by copy l0
 )       ; [case1]
@@ -308,7 +308,7 @@ p => p  by imp_i case1.
         <tr><td><span class="hrrule">→e</span></td>
           <td><span class="bprule">imp_e</span></td><td>
 <pre>
-ex : {p}{q} proof (p ,,, p => q ,,, q $) = [p][q]
+ex : {p}{q} proof (p , p => q , |- q) = [p][q]
 p      assumption; [l0]
 p => q assumption; [l1]
 q      by imp_e l0 l1.
@@ -316,7 +316,7 @@ q      by imp_e l0 l1.
         <tr><td><span class="hrrule">¬i</span></td>
           <td><span class="bprule">neg_i</span></td><td>
 <pre>
-ex : {p} proof (p => bot ,,, ~ p $) = [p]
+ex : {p} proof (p => bot , |- ~ p) = [p]
 p => bot    assumption; [l0]
 (  p        assumption; [l1]
    bot      by imp_e l1 l0
@@ -326,7 +326,7 @@ p => bot    assumption; [l0]
         <tr><td><span class="hrrule">¬e</span></td>
           <td><span class="bprule">neg_e</span></td><td>
 <pre>
-ex : {p} proof (p ,,, ~ p ,,, bot $) = [p]
+ex : {p} proof (p , ~ p , |- bot) = [p]
 p    assumption; [l0]
 ~ p  assumption; [l1]
 bot  by neg_e l0 l1.
@@ -334,14 +334,14 @@ bot  by neg_e l0 l1.
         <tr><td><span class="hrrule">⊥e</span></td>
           <td><span class="bprule">bot_e</span></td><td>
 <pre>
-ex : {p} proof (bot ,,, p /\ ~ p $) = [p]
+ex : {p} proof (bot , |- p /\ ~ p) = [p]
 bot      assumption; [l0]
 p /\ ~ p by bot_e l0.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">∀i</span></td>
           <td><span class="bprule">all_i</span></td><td>
 <pre>
-ex : {P} proof (all ([x] top \/ P x) $) = [P]
+ex : {P} proof (|- all ([x] top \/ P x)) = [P]
 (var [x]
    top               by top_i ; [l0]
    top \/ P x        by dis_i1 l0
@@ -351,14 +351,14 @@ all ([x] top \/ P x) by all_i case1.
         <tr><td><span class="hrrule">∀e</span></td>
           <td><span class="bprule">all_e</span></td><td>
 <pre>
-ex : {P}{t} proof (all ([x] P x) ,,, P t $) = [P][t]
+ex : {P}{t} proof (all ([x] P x) , |- P t) = [P][t]
 all ([x] P x)  assumption; [l0]
 P t            by all_e t l0.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">∃i</span></td>
           <td><span class="bprule">exi_i</span></td><td>
 <pre>
-ex : {P} proof (tm [t] P t ,,, exi ([x] P x) $) = [P]
+ex : {P} proof (tm [t] P t , |- exi ([x] P x)) = [P]
 var[t]
 P t           assumption; [l0]
 exi ([x] P x) by exi_i t l0.
@@ -366,8 +366,8 @@ exi ([x] P x) by exi_i t l0.
         <tr><td><span class="hrrule">∃e</span></td>
           <td><span class="bprule">exi_e</span></td><td>
 <pre>
-ex : {P} proof (all ([x] P x) ,,, exi ([y] ~ P y)
-                              ,,, bot $) = [P]
+ex : {P} proof (all ([x] P x) , exi ([y] ~ P y)
+                              , |- bot) = [P]
 all ([x] P x)    assumption; [l0]
 exi ([y] ~ P y)  assumption; [l1]
 (var[z]
@@ -380,13 +380,13 @@ bot              by exi_e l1 case1.
         <tr><td><span class="hrrule">=i</span></td>
           <td><span class="bprule">eq_i</span></td><td>
 <pre>
-ex : {t:term} proof (t == t $) = [t]
+ex : {t:term} proof (|- t == t) = [t]
 t == t  by eq_i.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">=e</span></td>
           <td><span class="bprule">eq_e</span></td><td>
 <pre>
-ex : {s}{t}{P} proof (s == t ,,, P s ,,, P t $) =
+ex : {s}{t}{P} proof (s == t , P s , |- P t) =
 [s][t][P]
 s == t  assumption; [l0]
 P s     assumption; [l1]
@@ -395,13 +395,13 @@ P t     by eq_e ([x] P x) l1 l0.
         <tr><td><span class="hrrule">LEM</span></td>
           <td><span class="bprule">lem</span></td><td>
 <pre>
-ex : {p} proof (p \/ ~ p $) = [p]
+ex : {p} proof (|- p \/ ~ p) = [p]
 p \/ ~ p  by lem.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">¬¬e</span></td>
           <td><span class="bprule">nne</span></td><td>
 <pre>
-ex : {p} proof (~ ~ ~ p ,,, ~ p $) = [p]
+ex : {p} proof (~ ~ ~ p , |- ~ p) = [p]
 ~ ~ ~ p  assumption; [l0]
 ~ p      by nne l0.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>

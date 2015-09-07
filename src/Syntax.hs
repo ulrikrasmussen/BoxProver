@@ -196,7 +196,7 @@ convertProp m =
 convertSequent :: M -> Sequent
 convertSequent m =
   case m of
-  M [] (R (RConst ",,,") [m1, m2]) ->
+  M [] (R (RConst ",") [m1, m2]) ->
     let assmForm = convertProp m1
         Sequent as cf = convertSequent m2
     in Sequent (Right assmForm:as) cf
@@ -204,7 +204,7 @@ convertSequent m =
     let Sequent as cf = convertSequent (M [] r)
         assmTerm = maybe "_" id mv
     in Sequent (Left assmTerm:as) cf
-  M [] (R (RConst "$") [pm]) ->
+  M [] (R (RConst "|-") [pm]) ->
     Sequent [] (Right $ convertProp pm)
   M [] (R (RVar x _) ys) ->
     Sequent [] (Left (x, map convertVarName ys))

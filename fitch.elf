@@ -18,41 +18,44 @@ top  : prop.
 %prefix 8 ~.
 
 sequent : type. %name sequent Sequent#.
-$ : prop -> sequent. %postfix 4 $.
+|- : prop -> sequent. %prefix 4 |-.
 tm : (term -> sequent) -> sequent.
-,,, : prop -> sequent -> sequent. %infix right 3 ,,,.
+, : prop -> sequent -> sequent. %infix right 3 ,.
 
 proof : sequent -> type. %name proof Alpha#.
 ref : sequent -> type. %name ref Ref#.
 
 var : ({t:term} proof (S t)) -> proof (tm S).
-assumption; : {Phi} (ref (Phi $) -> proof S) -> proof (Phi ,,, S). %infix right 4 assumption;.
+assumption; : {Phi} (ref (|- Phi) -> proof S) -> proof (Phi , S). %infix right 4 assumption;.
 ; : proof S -> (ref S -> proof T) -> proof T. %infix right 3 ;.
 
-copy : ref (Phi $) -> proof (Phi $).
-top_i : proof (top $).
-con_i : ref (A $) -> ref (B $) -> proof (A /\ B $).
-con_e1 : ref (A /\ B $) -> proof (A $).
-con_e2 : ref (A /\ B $) -> proof (B $).
-dis_i1 : ref (A $) -> proof (A \/ B $).
-dis_i2 : ref (B $) -> proof (A \/ B $).
-dis_e : ref (A \/ B $) -> ref (A ,,, C $) -> ref (B ,,, C $) -> proof (C $).
-imp_i : ref (A ,,, B $) -> proof (A => B $).
-imp_e : ref (A $) -> ref (A => B $) -> proof (B $).
-neg_i : ref (A ,,, bot $) -> proof (~ A $).
-neg_e : ref (A $) -> ref (~ A $) -> proof (bot $).
-bot_e : ref (bot $) -> proof (A $).
+%abbrev
+premise; = [x][y] x assumption; y. %infix right 4 premise;.
 
-all_i : ref (tm [x] A x $) -> proof (all A $).
-all_e : {T:term} ref (all A $) -> proof (A T $).
-exi_i : {T:term} ref (A T $) -> proof (exi A $).
-exi_e : ref (exi A $) -> ref (tm [x] A x ,,, B $) -> proof (B $).
-eq_i : proof (T == T $).
-eq_e : {P} ref (P S $) -> ref (S == T $) -> proof (P T $).
+copy : ref (|- Phi) -> proof (|- Phi).
+top_i : proof (|- top).
+con_i : ref (|- A) -> ref (|- B) -> proof (|- A /\ B).
+con_e1 : ref (|- A /\ B) -> proof (|- A).
+con_e2 : ref (|- A /\ B) -> proof (|- B).
+dis_i1 : ref (|- A) -> proof (|- A \/ B).
+dis_i2 : ref (|- B) -> proof (|- A \/ B).
+dis_e : ref (|- A \/ B ) -> ref (A , |- C) -> ref (B , |- C) -> proof (|- C).
+imp_i : ref (A , |- B ) -> proof (|- A => B ).
+imp_e : ref (|- A ) -> ref (|- A => B ) -> proof (|- B).
+neg_i : ref (A , |- bot ) -> proof (|- ~ A ).
+neg_e : ref (|- A ) -> ref (|- ~ A ) -> proof (|- bot).
+bot_e : ref (|- bot ) -> proof (|- A).
 
-lem   : proof (A \/ ~ A $).
+all_i : ref (tm [x] |- A x) -> proof (|- all A ).
+all_e : {T:term} ref (|- all A ) -> proof (|- A T ).
+exi_i : {T:term} ref (|- A T ) -> proof (|- exi A ).
+exi_e : ref (|- exi A ) -> ref (tm [x] A x , |- B ) -> proof (|- B ).
+eq_i : proof (|- T == T ).
+eq_e : {P} ref (|- P S ) -> ref (|- S == T ) -> proof (|- P T ).
 
-nne : ref (~ ~ A $) -> proof (A $).
+lem   : proof (|- A \/ ~ A ).
+
+nne : ref (|- ~ ~ A ) -> proof (|- A ).
 
 %abbrev
-by : {A} proof (A $) -> proof (A $) = [_][x] x. %infix none 4 by.
+by : {A} proof (|- A ) -> proof (|- A ) = [_][x] x. %infix none 4 by.
