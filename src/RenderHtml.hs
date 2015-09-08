@@ -110,6 +110,7 @@ renderReference rule refs = do
                   , ("imp_e","→e"), ("neg_i","¬i"), ("neg_e","¬e"), ("bot_e","⊥e")
                   , ("all_i","∀i"), ("all_e","∀e"), ("exi_i","∃i"), ("exi_e","∃e")
                   , ("eq_i","=i"), ("eq_e","=e"), ("lem", "LEM"), ("nne", "¬¬e")
+                  , ("mt", "MT"), ("nni", "¬¬i"), ("pbc", "PBC")
                   ]) ++ [("var", termIntroSpan "variable")]
   let renderLineRef r =
         case r of

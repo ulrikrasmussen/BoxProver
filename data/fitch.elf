@@ -45,6 +45,7 @@ imp_e : ref (|- A ) -> ref (|- A => B ) -> proof (|- B).
 neg_i : ref (A , |- bot ) -> proof (|- ~ A ).
 neg_e : ref (|- A ) -> ref (|- ~ A ) -> proof (|- bot).
 bot_e : ref (|- bot ) -> proof (|- A).
+nne : ref (|- ~ ~ A ) -> proof (|- A ).
 
 all_i : ref (tm [x] |- A x) -> proof (|- all A ).
 all_e : {T:term} ref (|- all A ) -> proof (|- A T ).
@@ -53,9 +54,10 @@ exi_e : ref (|- exi A ) -> ref (tm [x] A x , |- B ) -> proof (|- B ).
 eq_i : proof (|- T == T ).
 eq_e : {P} ref (|- P S ) -> ref (|- S == T ) -> proof (|- P T ).
 
-lem   : proof (|- A \/ ~ A ).
-
-nne : ref (|- ~ ~ A ) -> proof (|- A ).
+mt  : ref (|- A => B) -> ref (|- ~ B) -> proof (|- ~ A).
+nni : ref (|- A) -> proof (|- ~ ~ A).
+pbc : ref (~ A , |- bot) -> proof (|- A).
+lem : proof (|- A \/ ~ A ).
 
 %abbrev
 by : {A} proof (|- A ) -> proof (|- A ) = [_][x] x. %infix none 4 by.

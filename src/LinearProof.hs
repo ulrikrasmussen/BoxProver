@@ -193,6 +193,15 @@ linearize' pt sq =
   NNE _phiA ref -> do
     l <- getRef ref
     singleLine sq "nne" [l]
+  NNI _phiA ref -> do
+    l <- getRef ref
+    singleLine sq "nni" [l]
+  PBC _phiA ref -> do
+    l <- getRef ref
+    singleLine sq "pbc" [l]
+  MT _phiA _phiB ref1 ref2 -> do
+    ls <- mapM getRef [ref1, ref2]
+    singleLine sq "mt" ls
   Hole proofType x args -> do
     l <- gets nextLine
     incNextLine

@@ -105,6 +105,9 @@ data ProofTerm = VarIntro Sequent (Maybe VarName) ProofTerm
                | EqE Term Term (Maybe VarName) Formula RefName RefName
                | LEM Formula
                | NNE Formula RefName
+               | PBC Formula RefName
+               | NNI Formula RefName
+               | MT Formula Formula RefName RefName
                | Hole ProofType VarName [Obj] -- A by Hole(dep1, ..., depn)
   deriving (Eq, Ord, Show)
 
@@ -323,6 +326,12 @@ convertProofTerm m =
     LEM (convertProp mPA)
   M [] (R (RConst "nne") [mPA, mRef]) ->
     NNE (convertProp mPA) (convertVarName mRef)
+  M [] (R (RConst "pbc") [mPA, mRef]) ->
+    PBC (convertProp mPA) (convertVarName mRef)
+  M [] (R (RConst "mt") [mPA, mPB, mRef1, mRef2]) ->
+    MT (convertProp mPA) (convertProp mPB) (convertVarName mRef1) (convertVarName mRef2)
+  M [] (R (RConst "nni") [mPA, mRef]) ->
+    NNI (convertProp mPA) (convertVarName mRef)
   M (_:_) _ -> error $ concat ["Encountered unexpected open proof term."]
   M [] (R (RVar hole (A bindings p)) args) ->
     Hole (convertProofType p)
