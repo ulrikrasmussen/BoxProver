@@ -135,13 +135,21 @@ ul#tabButtons {
 .open-indicator {
     font-family: sans-serif;
     font-weight: bold;
-    color: red;
+    color: #b54747;
 }
 
 .closed-indicator {
     font-family: sans-serif;
     font-weight: bold;
-    color: green;
+    color: #7eb547;
+}
+
+#tabButtons .inactive .closed-indicator {
+    color: #bfb;
+}
+
+#tabButtons .inactive .open-indicator {
+    color: #fbb;
 }
 
 #tabPanels div.tabContent {
