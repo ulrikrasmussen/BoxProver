@@ -86,14 +86,40 @@
       .open-example {
       cursor: pointer;
       }
+
+      .output {
+      padding-left:1em;
+      background-color: #ffd;
+      color: 333;
+      }
+
+      .highlight {
+      font-weight: bold;
+      }
     </style>
   </head>
   <body>
     <div id="main">
-      <h1>BoxProver Tutorial</h1>
+      <h1>BoxProver Guide</h1>
+      <ul>
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#tutorial">Tutorial</a>
+          <ul>
+            <li><a href="#a-simple-example">A simple example</a></li>
+            <li><a href="#temporary-assumptions">Temporary assumptions</a></li>
+            <li><a href="#interactive-proving">Interactive proving</a></li>
+            <li><a href="#advanced-holes">Advanced holes</a></li>
+          </ul>
+        </li>
+        <li><a href="#rule-reference">Rule reference</a></li>
+      </ul>
+      
+      <h2><a name="introduction" href="#introduction">Introduction</a></h2>
       <p>
         BoxProver is a userfriendly front-end to the <a href="http://twelf.org/">Twelf</a> proof assistant, and provides a simple way to encode and verify natural deduction proofs in propositional and first-order logic using Fitch-style notation. Although all proofs will be specified in the language of Twelf, no knowledge of this language is required from the user. Besides verification, BoxProver also has facilities for producing visual representations of proofs, closely following the style and notation of the book <a href="http://www.cs.bham.ac.uk/research/projects/lics/">Logic in Computer Science, 2nd edition</a> by Huth &amp; Ryan (henceforth referred to as H&amp;R).
       </p>
+
+      <h1><a name="tutorial" href="#tutorial">Tutorial</a></h1>
 
       <p>
         Every BoxProver script must follow this general format:
@@ -114,9 +140,11 @@
         </tr>
       </table>
 
-      <h2>A simple example</h2>
+      <p>We will explain this in more detail in the following using a concrete example.</p>
+      
+      <h2><a name="a-simple-example" href="#a-simple-example">A simple example</a></h2>
       <p>
-        We explain this using an example. Let us consider Example 1.6 from H&amp;R:
+        Let us consider Example 1.6 from H&amp;R:
       </p>
 
 <table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="par">(</span><span class="pred">p</span><span class="op"> ∧ </span><span class="pred">q</span><span class="par">)</span><span class="op"> ∧ </span><span class="pred">r</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">2</td><td class="conc "><span class="pred">s</span><span class="op"> ∧ </span><span class="pred">t</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">3</td><td class="conc "><span class="pred">p</span><span class="op"> ∧ </span><span class="pred">q</span></td><td class="rule ">∧e₁ 1</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">4</td><td class="conc "><span class="pred">q</span></td><td class="rule ">∧e₂ 3</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">5</td><td class="conc "><span class="pred">s</span></td><td class="rule ">∧e₁ 2</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">6</td><td class="conc "><span class="pred">q</span><span class="op"> ∧ </span><span class="pred">s</span></td><td class="rule ">∧i 4, 5</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
@@ -161,7 +189,7 @@ q /\ s              by con_i l4 l5
         Proof lines are combined using the <code>;</code> (semicolon) operator. The semicolon <i>must</i> be surrounded by whitespace and be followed by a line name enclosed in square brackets. This has the effect of giving a name to the conclusion of the rule to the left, which can then be referenced by later rules.
       </p>
 
-      <h2>Temporary assumptions</h2>
+      <h2><a name="temporary-assumptions" href="#temporary-assumptions">Temporary assumptions</a></h2>
       <p>
         Fitch-proofs uses boxes to demarcate temporary assumptions. The BoxProver encoding of temporary assumptions also closely resemble the Fitch notation, which we will demonstrate with another example. Consider Example 1.14 from H&amp;R:
       </p>
@@ -221,8 +249,338 @@ p /\ q => r     by imp_i l2-6.
       <p>
         Note that every reference is typed by a <i>sequent</i> which for every single-line reference has no premises, and which for the "box" reference has a single premise and a single conclusion. That is, the annotation <code>l2-6 : ref (p /\ q , |- r)</code> indicates that lines 2 to 6 is a proof of the sequent <i>p ∧ q ⊢ r</i>.
       </p>
+
+      <h2><a name="interactive-proving" href="#interactive-proving">Interactive proving</a></h2>
+      <p>
+        If you are writing a large proof, you may want to check if your steps up until now are sound. BoxProver allows you to do this by providing a partial proof with "holes" in it. The system will accept your partial proof if the steps around the hole are sound and if the all references to the hole are consistent. Furthermore, if BoxProver can infer anything about what formula your hole <i>must</i> prove, it will tell you that information.
+      </p>
+      <p>
+        In order to insert a hole in a proof, you may simply write a single underscore (<code>_</code>) in place of a formula, proof or reference. This is also the easiest way to start a proof and make sure that you have written the proof preamble correctly &mdash; simply insert a hole for the entire proof body and ask BoxProver if the rest is correct. For example, let us encode the proof of Example 1.23 in H&amp;R, which proves the sequent <i>(p ∧ ¬q) → r , ¬r , p ⊢ q</i>. We can thus begin our proof script as follows:
+      </p>
+      <table class="example-table">
+        <tr>
+          <td style="padding-left:20px;">
+<pre>%abbrev
+ex1-23 : {p}{q}{r}
+  proof (p /\ ~ q => r , ~ r , p , |- q) =
+[p][q][r]
+_
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <p>
+        If BoxProver accepts this, it means that we did not make any mistakes in the encoding of the sequent. Furthermore, it will render a partial proof that looks as follows:
+      </p>
       
-      <h2>Rule reference</h2>
+<table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="hole"><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span>, <span class="op">¬</span><span class="pred">r</span>, <span class="pred">p</span> ⊢ <span class="pred">q</span></span></td><td class="rule "><span class="hole">Alpha#1</span></td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
+
+      <p>
+        <code>Alpha#1</code> is an auto-generated name for the hole, and it tells us that we need to prove <i>q</i> using assumptions/premises <i>p ∧ q → r</i>, <i>¬r</i> and <i>p</i>. The red color indicates that the proof is not yet finished. Below the proof, BoxProver will also produce an overview of the <i>proof context</i> which tells you what objects and assumptions are available to the proof that needs to be filled in for the hole. This is especially useful if you have a large proof and you have lost track of what assumptions are available in your context.
+      </p>
+      <p>
+      Let us go ahead and introduce the three premises, followed by another hole:
+      </p>
+      <table class="example-table">
+        <tr>
+          <td>
+            <table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">2</td><td class="conc "><span class="op">¬</span><span class="pred">r</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">3</td><td class="conc "><span class="pred">p</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">4</td><td class="conc "><span class="hole"><span class="pred">q</span></span></td><td class="rule "><span class="hole">Alpha#1</span></td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
+          </td>
+          <td style="padding-left:20px;">
+<pre>%abbrev
+ex1-23 : {p}{q}{r}
+  proof (p /\ ~ q => r , ~ r , p , |- q) =
+[p][q][r]
+p /\ ~ q => r       premise; [@prem1]
+~ r                 premise; [@prem2]
+p                   premise; [@prem3]
+_
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <p>
+        Success! BoxProver accepted our partial proof and replied with an updated rendering. It also correctly inferred that the only thing that we have left is to show <i>q</i>.
+        One way of doing that is to show that <i>¬q</i> would lead to a contradiction, and from that infer that <i>¬¬q</i> must hold. Assuming that we can prove that, the last line of our proof must be an invocation of the <i>¬¬e</i> rule which must make a reference to a proof of <i>¬¬q</i>. Let us use BoxProver to test if that idea will work, and what work we then have left:
+      </p>
+
+      <table class="example-table">
+        <tr>
+          <td>
+            <table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">2</td><td class="conc "><span class="op">¬</span><span class="pred">r</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">3</td><td class="conc "><span class="pred">p</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">4</td><td class="conc "><span class="pred">q</span></td><td class="rule ">¬¬e <span class="hole">(Ref#1)</span></td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
+          </td>
+          <td style="padding-left:20px;">
+<pre>%abbrev
+ex1-23 : {p}{q}{r}
+  proof (p /\ ~ q => r , ~ r , p , |- q) =
+[p][q][r]
+p /\ ~ q => r       premise; [@prem1]
+~ r                 premise; [@prem2]
+p                   premise; [@prem3]
+q                   by nne _
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <p>
+        In the above, we inserted a hole for a reference instead of a proof. The context information will tell us that <code>Ref#1</code> needs to be replaced with a concrete reference to a line concluding <i>¬¬q</i>.
+      </p>
+      <p>
+        Our plan is to show <i>¬¬q</i> using the <i>¬i</i> rule. This rule invocation must be inserted <i>before</i> the application of <i>¬¬e</i>, and it must be given a reference to a <i>box</i> which proves <i>⊥</i> by assuming <i>¬q</i>. We insert this line into our proof and put a hole for the reference:
+      </p>
+
+      <table class="example-table">
+        <tr>
+          <td>
+<table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">2</td><td class="conc "><span class="op">¬</span><span class="pred">r</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">3</td><td class="conc "><span class="pred">p</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">4</td><td class="conc "><span class="op">¬</span><span class="op">¬</span><span class="pred">q</span></td><td class="rule ">¬i <span class="hole">(Ref#1)</span></td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">5</td><td class="conc "><span class="pred">q</span></td><td class="rule ">¬¬e 4</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
+          </td>
+          <td style="padding-left:20px;">
+<pre>%abbrev
+ex1-23 : {p}{q}{r}
+  proof (p /\ ~ q => r , ~ r , p , |- q) =
+[p][q][r]
+p /\ ~ q => r       premise; [@prem1]
+~ r                 premise; [@prem2]
+p                   premise; [@prem3]
+~ ~ q               by neg_i _ ;[@n-n-q]
+q                   by nne @n-n-q
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <p>
+        The context information (not shown here) tells us that <code>Ref#1</code> must be a reference to a proof of the sequent <i>¬q ⊢ ⊥</i>. To produce a proof with an assumption, we need to make a new box. The contents of boxes can also be replaced by holes:
+      </p>
+
+      <table class="example-table">
+        <tr>
+          <td>
+<table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">2</td><td class="conc "><span class="op">¬</span><span class="pred">r</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">3</td><td class="conc "><span class="pred">p</span></td><td class="rule ">premise </td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">4</td><td class="conc "><span class="hole"><span class="op">¬</span><span class="pred">q</span> ⊢ ⊥</span></td><td class="rule "><span class="hole">Alpha#1</span></td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">5</td><td class="conc "><span class="op">¬</span><span class="op">¬</span><span class="pred">q</span></td><td class="rule ">¬i 4</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">6</td><td class="conc "><span class="pred">q</span></td><td class="rule ">¬¬e 5</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
+          </td>
+          <td style="padding-left:20px;">
+<pre>%abbrev
+ex1-23 : {p}{q}{r}
+  proof (p /\ ~ q => r , ~ r , p , |- q) =
+[p][q][r]
+p /\ ~ q => r       premise; [@prem1]
+~ r                 premise; [@prem2]
+p                   premise; [@prem3]
+(  _
+)                   ; [#box1]  
+~ ~ q               by neg_i #box1 ;[@n-n-q]
+q                   by nne @n-n-q
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+      
+      <p>
+        BoxProver infers that we must prove the sequent <i>¬q ⊢ ⊥</i>, which required that the first line of the box must be an assumption of <i>¬q</i>. We insert that and continue:
+      </p>
+
+      <table class="example-table">
+        <tr>
+          <td>
+<table class="boxproof"><tbody><tr><td class="line">1</td><td class="box "></td><td class="conc "><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">2</td><td class="box "></td><td class="conc "><span class="op">¬</span><span class="pred">r</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">3</td><td class="box "></td><td class="conc "><span class="pred">p</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">4</td><td class="box active open"></td><td class="conc open"><span class="op">¬</span><span class="pred">q</span></td><td class="rule open">assumption </td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">5</td><td class="box active close"></td><td class="conc close"><span class="hole">⊥</span></td><td class="rule close"><span class="hole">Alpha#1</span></td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box"> </td><td class="conc"> </td><td class="rule"> </td><td class="box"> </td></tr><tr><td class="line">6</td><td class="box "></td><td class="conc "><span class="op">¬</span><span class="op">¬</span><span class="pred">q</span></td><td class="rule ">¬i 4-5</td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">7</td><td class="box "></td><td class="conc "><span class="pred">q</span></td><td class="rule ">¬¬e 6</td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr></tbody></table>
+          </td>
+          <td style="padding-left:20px;">
+<pre>%abbrev
+ex1-23 : {p}{q}{r}
+  proof (p /\ ~ q => r , ~ r , p , |- q) =
+[p][q][r]
+p /\ ~ q => r       premise; [@prem1]
+~ r                 premise; [@prem2]
+p                   premise; [@prem3]
+(  ~ q              assumption; [@n-q]
+  _
+)                   ; [#box1]  
+~ ~ q               by neg_i #box1 ;[@n-n-q]
+q                   by nne @n-n-q
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <p>
+        We now need to produce a proof of <i>⊥</i> which will be inserted at line 5. At this point, we can look at the proof context to get an overview of the assumptions that will be available to us:
+      </p>
+
+<table class="hypotheses"><tbody><tr><td><span class="hole">Alpha#1</span></td><td> : </td><td><span class="metakind">Proof of </span>⊥<div class="context-separator">with context&nbsp;<i class="el el-caret-up"></i></div><div class="context"><table class="hypotheses"><tbody><tr><td>p</td><td> : </td><td><span class="metakind">Proposition</span></td></tr><tr><td>q</td><td> : </td><td><span class="metakind">Proposition</span></td></tr><tr><td>r</td><td> : </td><td><span class="metakind">Proposition</span></td></tr><tr><td><span class="hole">_</span></td><td> : </td><td><span class="metakind">Ref to </span><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td></tr><tr><td><span class="hole">_</span></td><td> : </td><td><span class="metakind">Ref to </span><span class="op">¬</span><span class="pred">r</span></td></tr><tr><td><span class="hole">_</span></td><td> : </td><td><span class="metakind">Ref to </span><span class="pred">p</span></td></tr><tr><td><span class="hole">_</span></td><td> : </td><td><span class="metakind">Ref to </span><span class="op">¬</span><span class="pred">q</span></td></tr></tbody></table></div></td></tr><tr><td>p</td><td> : </td><td><span class="metakind">Proposition</span></td></tr><tr><td>q</td><td> : </td><td><span class="metakind">Proposition</span></td></tr><tr><td>r</td><td> : </td><td><span class="metakind">Proposition</span></td></tr></tbody></table>
+
+      <p>
+        As can easily be verified, this just says that all the conclusions at lines 1,2,3 and 4 are available in line 5. Unfortunately the line names are not provided in the current version of BoxProver &mdash; this may change in the future.
+      </p>
+
+      <p>
+        We can see that the context contains enough references to prove the premise of the implication. This can then be eliminated to produce <i>r</i>, and finally we can prove <i>⊥</i> since we had <i>¬r</i> as a premise. We fill out the rest of the proof and check that there are no holes left:
+      </p>
+
+      <table class="example-table">
+        <tr>
+          <td>
+<table class="boxproof"><tbody><tr><td class="line">1</td><td class="box "></td><td class="conc "><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">2</td><td class="box "></td><td class="conc "><span class="op">¬</span><span class="pred">r</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">3</td><td class="box "></td><td class="conc "><span class="pred">p</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">4</td><td class="box active open"></td><td class="conc open"><span class="op">¬</span><span class="pred">q</span></td><td class="rule open">assumption </td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">5</td><td class="box active "></td><td class="conc "><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span></td><td class="rule ">∧i 3, 4</td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">6</td><td class="box active "></td><td class="conc "><span class="pred">r</span></td><td class="rule ">→e 5, 1</td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">7</td><td class="box active close"></td><td class="conc close">⊥</td><td class="rule close">¬e 6, 2</td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box"> </td><td class="conc"> </td><td class="rule"> </td><td class="box"> </td></tr><tr><td class="line">8</td><td class="box "></td><td class="conc "><span class="op">¬</span><span class="op">¬</span><span class="pred">q</span></td><td class="rule ">¬i 4-7</td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">9</td><td class="box "></td><td class="conc "><span class="pred">q</span></td><td class="rule ">¬¬e 8</td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr></tbody></table>
+          </td>
+          <td style="padding-left:20px;">
+<pre>%abbrev
+ex1-23 : {p}{q}{r}
+  proof (p /\ ~ q => r , ~ r , p , |- q) =
+[p][q][r]
+p /\ ~ q => r       premise; [@prem1]
+~ r                 premise; [@prem2]
+p                   premise; [@prem3]
+(  ~ q              assumption; [@n-q]
+  p /\ ~ q          by con_i @prem3 @n-q ; [@pnq]
+  r                 by imp_e @pnq @prem1 ; [@r]
+  bot               by neg_e @r @prem2
+)                   ; [#box1]  
+~ ~ q               by neg_i #box1 ;[@n-n-q]
+q                   by nne @n-n-q
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <h3>Dealing with errors</h3>
+      <p>
+        While writing the above proof, I accidentally made a reference to <code>@prem2</code> instead of <code>@prem3</code> when trying to prove the formula <code>p /\ ~ q</code>.
+      </p>
+      
+      <table class="example-table">
+        <tr>
+          <td style="padding-left:20px;">
+<pre>%abbrev
+ex1-23 : {p}{q}{r}
+  proof (p /\ ~ q => r , ~ r , p , |- q) =
+[p][q][r]
+p /\ ~ q => r       premise; [@prem1]
+~ r                 premise; [@prem2]
+p                   premise; [@prem3]
+(  ~ q              assumption; [@n-q]
+                    % The line below is wrong
+  p /\ ~ q          by con_i @prem2 @n-q ; [@pnq]
+  r                 by imp_e @pnq @prem1 ; [@r]
+  bot               by neg_e @r @prem2
+)                   ; [#box1]  
+~ ~ q               by neg_i #box1 ;[@n-n-q]
+q                   by nne @n-n-q
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+      
+      <p>
+        Instead of producing a typeset proof, BoxProver will respond with the following error message:
+      </p>
+      
+      <pre class="output">
+[Opening file /tmp/twelf-input10599613932089018456]
+/tmp/twelf-input10599613932089018456:<span class="highlight">10.24-10.41</span> Error: 
+Type mismatch
+Expected: <span class="highlight">proof (|- p /\ ~ q)</span>
+Inferred: <span class="highlight">proof (|- ~ r /\ ~ q)</span>
+Head mismatch
+Argument type did not match function domain type
+(Index object(s) did not match)
+[Closing file /tmp/twelf-input10599613932089018456]
+/tmp/twelf-input10599613932089018456:1.2-16.2 Error: 
+ 1 error found
+      </pre>
+
+      <p>
+        The error messages are generated by Twelf and may sometimes look cryptic. The above one is very helpful though. It tells us that the error occurred on line 10 in our proof script, and that we accidentally proved the formula <i>¬r ∧ ¬q</i> instead of <i>p ∧ ¬q</i>. Since we have developed our proof interactively, we can just delete what we just wrote and go back to the last working state and try again.
+      </p>
+
+      <h2><a name="advanced-holes" href="#advanced-holes">Advanced holes</a></h2>
+      <p>
+        In the previous example we only inserted holes for proofs whose conclusion was known, and we only inserted one hole at a time. BoxProver allows you to insert <i>any</i> number of holes, however, and it also allows you to insert holes for subproofs that are not referenced anywhere else and whose desired conclusion is hence not known. In the following example, we intend to eliminate the disjunction <i>¬p ∨ q</i>, so we open two boxes which each start assuming one of the disjuncts. We put three holes in the proof, one for each proof in each box, and one for the remainder of the proof:
+      </p>
+      <table class="example-table">
+        <tr>
+          <td>
+<table class="boxproof"><tbody><tr><td class="line">1</td><td class="box "></td><td class="conc "><span class="pred">p</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">2</td><td class="box "></td><td class="conc "><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">3</td><td class="box "></td><td class="conc "><span class="op">¬</span><span class="pred">p</span><span class="op"> ∨ </span><span class="pred">q</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">4</td><td class="box active open"></td><td class="conc open"><span class="op">¬</span><span class="pred">p</span></td><td class="rule open">assumption </td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">5</td><td class="box active close"></td><td class="conc close"><span class="hole"><span class="var">Sequent#1</span><span class="par">(</span><span class="var">p</span>, <span class="var">q</span>, <span class="var">r</span>, <span class="var">@p</span>, <span class="var">@qr</span>, <span class="var">@dis</span><span class="par">)</span></span></td><td class="rule close"><span class="hole">Alpha#1</span></td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box"> </td><td class="conc"> </td><td class="rule"> </td><td class="box"> </td></tr><tr><td class="line">6</td><td class="box active open"></td><td class="conc open"><span class="pred">q</span></td><td class="rule open">assumption </td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">7</td><td class="box active close"></td><td class="conc close"><span class="hole"><span class="var">Sequent#2</span><span class="par">(</span><span class="var">p</span>, <span class="var">q</span>, <span class="var">r</span>, <span class="var">@p</span>, <span class="var">@qr</span>, <span class="var">@dis</span>, <span class="var">#box1</span><span class="par">)</span></span></td><td class="rule close"><span class="hole">Alpha#2</span></td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box"> </td><td class="conc"> </td><td class="rule"> </td><td class="box"> </td></tr><tr><td class="line">8</td><td class="box "></td><td class="conc "><span class="hole"><span class="pred">r</span></span></td><td class="rule "><span class="hole">Alpha#3</span></td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr></tbody></table>
+          </td>
+          <td style="padding-left:20px;">
+<pre>
+%abbrev
+adv-holes : {p}{q}{r}
+proof (p , q => r
+      , ~ p \/ q , |- r) =
+[p][q][r]
+p           premise; [@p]
+q => r      premise; [@qr]
+~ p \/ q    premise; [@dis]
+(   ~ p     assumption; [@np]
+    _
+)           ;[#box1]
+(   q       assumption; [@q]
+    _
+)           ;[#box2]
+_
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <p>
+        Since the two boxes are not used anywhere, BoxProver cannot figure out what they are supposed to prove, and thus inserts generic placeholders called <code>Sequent#1</code> and <code>Sequent#2</code>. The parameters indicate that the unknown sequents <i>may</i> contain objects from the context.
+      </p>
+
+      <p>
+        If we replace the last hole with a correct invocation of the disjunction elimination rule referencing the two boxes, BoxProver will be able to tell us more specific information:
+      </p>
+
+      <table class="example-table">
+        <tr>
+          <td>
+<table class="boxproof"><tbody><tr><td class="line">1</td><td class="box "></td><td class="conc "><span class="pred">p</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">2</td><td class="box "></td><td class="conc "><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">3</td><td class="box "></td><td class="conc "><span class="op">¬</span><span class="pred">p</span><span class="op"> ∨ </span><span class="pred">q</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">4</td><td class="box active open"></td><td class="conc open"><span class="op">¬</span><span class="pred">p</span></td><td class="rule open">assumption </td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">5</td><td class="box active close"></td><td class="conc close"><span class="hole"><span class="pred">r</span></span></td><td class="rule close"><span class="hole">Alpha#1</span></td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box"> </td><td class="conc"> </td><td class="rule"> </td><td class="box"> </td></tr><tr><td class="line">6</td><td class="box active open"></td><td class="conc open"><span class="pred">q</span></td><td class="rule open">assumption </td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">7</td><td class="box active close"></td><td class="conc close"><span class="hole"><span class="pred">r</span></span></td><td class="rule close"><span class="hole">Alpha#2</span></td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box"> </td><td class="conc"> </td><td class="rule"> </td><td class="box"> </td></tr><tr><td class="line">8</td><td class="box "></td><td class="conc "><span class="pred">r</span></td><td class="rule ">∨e 3, 4-5, 6-7</td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr></tbody></table>
+          </td>
+          <td style="padding-left:20px;">
+<pre>
+%abbrev
+adv-holes : {p}{q}{r}
+proof (p , q => r
+      , ~ p \/ q , |- r) =
+[p][q][r]
+p        premise; [@p]
+q => r   premise; [@qr]
+~ p \/ q premise; [@dis]
+(   ~ p  assumption; [@np]
+    _
+)        ;[#box1]
+(   q    assumption; [@q]
+    _
+)        ;[#box2]
+r        by dis_e @dis #box1 #box2
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+      
+      <h1><a name="rule-reference" href="#rule-reference">Rule reference</a></h1>
       <p>
         The following is a table showing the BoxProver names for each rule from H&amp;R. Each rule is accompanied by a minimal example showing its use. The examples are also a good way to get familiar with the notation used for formulas/propositions.
       </p>
@@ -237,14 +595,6 @@ p /\ q => r     by imp_i l2-6.
 <pre>
 ex : proof (|- top) =
 top by top_i.
-</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
-        <tr><td><span class="hrrule">⊥e</span></td>
-          <td><span class="bprule">bot_e</span></td>
-          <td>
-<pre>
-ex : {p} proof (bot , |- p /\ ~ p) = [p]
-bot       assumption; [l0]
-p /\ ~ p  by bot_e l0.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">∧i</span></td>
           <td><span class="bprule">con_i</span></td><td>
@@ -337,6 +687,47 @@ bot  by neg_e l0 l1.
 ex : {p} proof (bot , |- p /\ ~ p) = [p]
 bot      assumption; [l0]
 p /\ ~ p by bot_e l0.
+          </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">¬¬e</span></td>
+          <td><span class="bprule">nne</span></td><td>
+<pre>
+ex : {p} proof (~ ~ ~ p , |- ~ p) = [p]
+~ ~ ~ p  assumption; [l0]
+~ p      by nne l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">LEM</span></td>
+          <td><span class="bprule">lem</span></td><td>
+<pre>
+ex : {p} proof (|- p \/ ~ p) = [p]
+p \/ ~ p  by lem.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+        <tr><td><span class="hrrule">PBC</span></td>
+          <td><span class="bprule">pbc</span></td><td>
+<pre>
+%abbrev
+ex : {p} proof (p , |- p) = [p]
+p       assumption; [l0]
+(   ~ p assumption; [l1]
+    bot by neg_e l0 l1
+)       ; [l1-2]
+p       by pbc l1-2.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+
+        <tr><td><span class="hrrule">¬¬i</span></td>
+          <td><span class="bprule">nne</span></td><td>
+<pre>
+ex : {p} proof (p , |- ~ ~ p) = [p]
+p       assumption; [l0]
+~ ~ p   by nni l0.
+</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
+
+        <tr><td><span class="hrrule">MT</span></td>
+          <td><span class="bprule">mt</span></td><td>
+<pre>
+ex : {p}{q} proof (p => q , ~ q , |- ~ p) = [p][q]
+p => q  assumption; [l0]
+~ q     assumption; [l1]
+~ p     by mt l0 l1.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
         <tr><td><span class="hrrule">∀i</span></td>
           <td><span class="bprule">all_i</span></td><td>
@@ -391,19 +782,6 @@ ex : {s}{t}{P} proof (s == t , P s , |- P t) =
 s == t  assumption; [l0]
 P s     assumption; [l1]
 P t     by eq_e ([x] P x) l1 l0.
-</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
-        <tr><td><span class="hrrule">LEM</span></td>
-          <td><span class="bprule">lem</span></td><td>
-<pre>
-ex : {p} proof (|- p \/ ~ p) = [p]
-p \/ ~ p  by lem.
-</pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
-        <tr><td><span class="hrrule">¬¬e</span></td>
-          <td><span class="bprule">nne</span></td><td>
-<pre>
-ex : {p} proof (~ ~ ~ p , |- ~ p) = [p]
-~ ~ ~ p  assumption; [l0]
-~ p      by nne l0.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
       </table>
     </div>
