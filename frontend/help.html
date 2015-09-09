@@ -8,6 +8,7 @@
     <script type="text/javascript" charset="utf-8" src="ace/src-min/ace.js"></script>
     <link rel="stylesheet" type="text/css" href="elusive-icons/css/elusive-icons.css" />
     <link rel="stylesheet" type="text/css" href="boxproof.css" />
+    <link rel="stylesheet" type="text/css" media="print" href="print.css" />
     <script src="jquery-1.11.3.min.js"></script>
     <script>
       function openExample()
@@ -42,10 +43,7 @@
       table {
       margin-left: auto;
       margin-right: auto;
-      }
-
-      #ruletable tr:first-child {
-      font-weight: bold;
+      page-break-inside: avoid;
       }
 
       .hrrule {
@@ -63,23 +61,24 @@
       padding:5px;
       }
 
-      #ruletable {
+      #ruletable , table.simple-table {
       border-collapse: collapse;
       }
       
-      #ruletable tr {
+      #ruletable tr , table.simple-table tr {
       border-bottom: 1px solid #ccc;
       }
 
-      #ruletable tr:first-child {
+      #ruletable tr:first-child , table.simple-table tr:first-child {
       border-bottom: 2px solid black;
+      font-weight: bold;
       }
 
-      #ruletable tr:last-child {
+      #ruletable tr:last-child , table.simple-table tr:last:child {
       border-bottom: none;
       }
       
-      #ruletable td {
+      #ruletable td , table.simple-table td {
       padding: 6px 15px;
       }
 
@@ -111,6 +110,21 @@
             <li><a href="#advanced-holes">Advanced holes</a></li>
           </ul>
         </li>
+        <li><a href="#syntax-reference">Syntax</a>
+          <ul>
+            <li><a href="#variables">Variables</a></li>
+            <li><a href="#formulas">Formulas</a></li>
+            <li><a href="#sequents">Sequents</a></li>
+            <li><a href="#proofs">Proofs</a>
+              <ul>
+                <li><a href="#proof-lines">Proof lines</a></li>
+                <li><a href="#assumptions">Assumptions/premises</a></li>
+                <li><a href="#boxes">Boxes</a></li>
+                <li><a href="#chaining">Chaining proofs together</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
         <li><a href="#rule-reference">Rule reference</a></li>
       </ul>
       
@@ -119,6 +133,10 @@
         BoxProver is a userfriendly front-end to the <a href="http://twelf.org/">Twelf</a> proof assistant, and provides a simple way to encode and verify natural deduction proofs in propositional and first-order logic using Fitch-style notation. Although all proofs will be specified in the language of Twelf, no knowledge of this language is required from the user. Besides verification, BoxProver also has facilities for producing visual representations of proofs, closely following the style and notation of the book <a href="http://www.cs.bham.ac.uk/research/projects/lics/">Logic in Computer Science, 2nd edition</a> by Huth &amp; Ryan (henceforth referred to as H&amp;R).
       </p>
 
+      <p>
+        The following section gives a quick crash-course in BoxProver. If this is the first time you are using BoxProver, start by reading that. The sections on <a href="#syntax-reference">syntax</a> and <a href="#rule-reference">rules</a> contains details on the syntactic structure and proof rules.
+      </p>
+      
       <h1><a name="tutorial" href="#tutorial">Tutorial</a></h1>
 
       <p>
@@ -129,7 +147,7 @@
         <tr>
           <td>
 <pre>%abbrev
-<i>proof name</i> : {p1}{p2} ... {pn} proof ( <i>... sequent ...</i> ) =
+<i>proof_name</i> : {p1}{p2} ... {pn} proof ( <i>... sequent ...</i> ) =
 [p1][p2] ... [pn]
 
  <i>... proof body ...</i>
@@ -140,7 +158,7 @@
         </tr>
       </table>
 
-      <p>We will explain this in more detail in the following using a concrete example.</p>
+      <p>This will declare a proof named <i>proof_name</i> which proves a given sequent about propositions <i>p₁</i>, <i>p₂</i>, ..., <i>p<sub>n</sub></i>. We will explain this in more detail in the following using a concrete example.</p>
       
       <h2><a name="a-simple-example" href="#a-simple-example">A simple example</a></h2>
       <p>
@@ -579,6 +597,290 @@ r        by dis_e @dis #box1 #box2
           <td><span class="open-example el el-circle-arrow-right"></span></td>
         </tr>
       </table>
+
+      <h1><a name="syntax-reference" href="#syntax-reference">Syntax</a></h1>
+      <p>
+        The following is a reference of the general syntactic structure of BoxProver scripts.
+      </p>
+
+      <h2><a name="variables" href="#variables">Variables</a></h2>
+      <p>
+        A variable is an identifier that is not equal to an existing rule name. A valid identifier consists of any sequence of printable non-whitespace characters, except for the following list of <i>reserved symbols</i>:
+        <center> <code>. : [ ] { } ( ) </code> </center>
+      </p>
+      <p>
+        This means that BoxProver is very relaxed with regards to what it considers to be a valid identifier. For example, <code>@p\/q=>r</code> is a valid identifier, even though <code>p \/ q => r</code> is a formula. This underlines the fact that <strong>whitespace around operators is very important</strong> to avoid having them interpreted as identifiers.
+      </p>
+      <p>
+        By convention, identifiers generally begin with a lower-case letter, except for so-called <i>meta-variables</i> standing for proof holes which begin with an upper-case letter. For proofs in predicate logic, we will also use upper-case letters for predicates.
+      </p>
+      <p>
+        We recommend the following naming convention to keep your proofs readable:
+      </p>
+      <table class="simple-table">
+        <tr><td>Variable kind</td><td>Convention</td><td>Examples</td></tr>
+        <tr>
+          <td>Propositions</td>
+          <td>Only lower-case</td>
+          <td><code>p</code>, <code>q</code>, <code>r</code></td>
+        </tr>
+        <tr>
+          <td>Single-line references</td>
+          <td>Prefix with <code>@</code></td>
+          <td><code>@1</code>, <code>@7</code>, <code>@q</code>, <code>@q\/p</code></td>
+        </tr>
+        <tr>
+          <td>Multi-line references (i.e. box references)</td>
+          <td>Prefix with <code>#</code></td>
+          <td><code>#5-9</code>, <code>#box1</code>, <code>#~q-case</code></td>
+        </tr>
+        <tr>
+          <td>First-order predicates</td>
+          <td>Single-letter uppercase</td>
+          <td><code>P</code>, <code>R</code>, <code>S</code></td>
+        </tr>
+        <tr>
+          <td>First-order terms, constants</td>
+          <td>Only lower-case</td>
+          <td><code>f</code>, <code>g</code>, <code>c</code></td>
+        </tr>
+      </table>
+
+      <h2><a name="formulas" href="#formulas">Formulas</a></h2>
+      <p>
+        Logical connectives are encoded using ASCII imitations of their looks in "real" math notation. The precedence rules match those of H&amp;R, except for first-order quantifiers which require some explicit parentheses. The table below shows how each logical connective is written in BoxProver:
+      </p>
+      <table class="simple-table">
+        <tr>
+          <td>H&amp;R</td>
+          <td>BoxProver</td>
+          <td colspan="3">Example translation</td>
+        </tr>
+        <tr>
+          <td>⊤</td>
+          <td><code>top</code></td>
+          <td>⊤</td><td>becomes</td><td><code>top</code></td>
+        </tr>
+        <tr>
+          <td>∧</td>
+          <td><code>/\</code></td>
+          <td><i>(p ∧ q) ∧ r</i></td><td>becomes</td><td><code>(p /\ q) /\ r</code></td>
+        </tr>
+        <tr>
+          <td>∨</td>
+          <td><code>\/</code></td>
+          <td><i>(p ∨ q) ∨ r</i></td><td>becomes</td><td><code>(p \/ q) \/ r</code></td>
+        </tr>
+        <tr>
+          <td>→</td>
+          <td><code>=></code></td>
+          <td><i>p → q → r</i></td><td>becomes</td><td><code>p => q => r</code></td>
+        </tr>
+        <tr>
+          <td>¬</td>
+          <td><code>~</code></td>
+          <td><i>¬¬q</i></td><td>becomes</td><td><code>~ ~ q</code></td>
+        </tr>
+        <tr>
+          <td>⊥</td>
+          <td><code>bot</code></td>
+          <td>⊥</td><td>becomes</td><td><code>bot</code></td>
+        </tr>
+        <tr>
+          <td>∀x</td>
+          <td><code>all ([x] <i> ... </i>)</code></td>
+          <td><i>∀x P(x) → ∀y Q(y)</i></td><td>becomes</td><td><code>all ([x] P x) => all ([y] Q y)</code></td>
+        </tr>
+        <tr>
+          <td>∃x</td>
+          <td><code>exi ([x] <i> ...</i>)</code></td>
+          <td><i>∃x P(x) → ∃y P(y)</i></td><td>becomes</td><td><code>exi ([x] P x) => exi ([y] P y)</code></td>
+        </tr>
+        <tr>
+          <td>=</td>
+          <td><code>==</code></td>
+          <td><i>f(x) = g(y)</i></td><td>becomes</td><td><code>f x == g y</code></td>
+        </tr>
+      </table>
+
+      <p>
+        Note that all operators <strong>must</strong> be surrounded by white-space, including prefix operators such as negation. For example, <code>~~q</code>, <code>~~ q</code> and <code>~ ~q</code> are not valid, but <code>~ ~ q</code> is.
+      </p>
+
+      <h2><a name="sequents" href="#sequents">Sequents</a></h2>
+      <p>
+        Proof sequents are written almost exactly as in H&amp;R, with ⊢ written as <code>|-</code>, but with the caveat that the last premise before the turnstile must be followed by a rather awkward-looking comma. The syntax is best explained by a series of examples:
+      </p>
+      <table class="simple-table">
+        <tr><td>H&amp;R</td><td>BoxProver</td></tr>
+        <tr>
+          <td>⊢ <i>p</i> → <i>q</i></td>
+          <td><code>|- p => q</code></td>
+        </tr>
+        <tr>
+          <td><i>p</i> ⊢ p</td>
+          <td><code> p , |- p</code></td>
+        </tr>
+        <tr>
+          <td>¬<i>q</i>, <i>p</i> ∨ <i>q</i> ⊢ <i>p</i></td>
+          <td><code>~ q , p \/ q , |- p</code></td>
+        </tr>
+      </table>
+
+      <p>
+        The comma symbol <code>,</code> is actually an operator and <strong>must</strong> be surrounded by whitespace. Remember to put a comma before the turnstile.
+      </p>
+
+      <h2><a name="proofs" href="#proofs">Proofs</a></h2>
+
+      <p>
+        Proofs in BoxProver are built from a set of primitives which are then composed in order to form larger proofs. Any proof written in BoxProver proves some sequent Φ ⊢ φ, where Φ is a possibly empty list of assumptions and φ is the conclusion of the proof.
+      </p>
+      <p>
+        The smallest proofs we can build are individual <i>proof lines</i> which just consists of a propositional formula and a justifying rule. In order to make larger proofs, we can either use the <i>assumption operator</i> to introduce new assumptions, or combine two proofs with the <i>sequence operator</i>. This will be described in more detail in the following.
+      </p>
+      
+      <h3><a name="proof-lines" href="#proof-lines">Proof lines</a></h3>
+      <p>
+        Proof lines are the smallest proofs you can write. A single proof line follows the following format:
+      </p>
+      <center><code><i>formula</i> by <i>rule</i> <i>ref₁</i> <i>ref₂</i> <i>...</i> <i>ref<sub>n</sub></i></code></center>
+      <p>
+        where <i>formula</i> is a formula, <i>rule</i> is a rule identifier, and <i>ref₁</i> thorugh <i>ref<sub>n</sub></i> are line reference identifiers. Note that line references are separated by whitespace only, no commas or parentheses are required.
+      </p>
+      <table class="simple-table">
+        <tr>
+          <td>H&amp;R</td>
+          <td>BoxProver</td>
+        </tr>
+        <tr>
+          <td>
+            <table>
+              <tr><td colspan="3">⋮</td></tr>
+              <tr><td><i>k</i></td><td><i>p</i> ∧ <i>q</i></td>
+                <td>∧i 3,6</td></tr>
+              <tr><td colspan="3">⋮</td></tr>
+            </table>
+          </td>
+          <td>
+            <table>
+              <tr><td>⋮</td></tr>
+              <tr><td><code>p /\ q  by  con_i @3 @6</code></td></tr>
+              <tr><td>⋮</td></tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <table>
+              <tr><td colspan="3">⋮</td></tr>
+              <tr><td>k</td><td><i>p</i> → <i>q</i></td><td>→i 5-9</td></tr>
+              <tr><td colspan="3">⋮</td></tr>
+            </table>
+          </td>
+          <td>
+            <table>
+              <tr><td>⋮</td></tr>
+              <tr><td><code>p => q  by  imp_i #5-9</code></td></tr>
+              <tr><td>⋮</td></tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+      
+      <h3><a name="assumptions" href="#assumptions">Assumptions/premises</a></h3>
+      <p>
+        Suppose we have written a proof α which proves a sequent <code><i>φ₁</i> , <i>...</i> , <i>φ<sub>n</sub></i> |- ψ</code> and contains a reference to a proof of <code>|- χ</code> named <code>@ref</code>. The operator <code>assumption;</code> can then be used to turn α into a proof of the sequent <code><i>χ</i>, <i>φ₁</i>, <i>...</i>, <i>φ<sub>n</i> |- ψ</code> as follows:
+      </p>
+        <pre>
+          χ assumption; [@ref]
+          α
+        </pre>
+      <p>
+        For a concrete example, let α be equal to the following single-line proof:
+      </p>
+      <center><code>~ ~ p by nni @p</code></center>
+      <p>
+        This will be a valid proof <code>α : proof (|- ~ ~ p)</code> if we assume that <code>@p : ref (|- p)</code> is available in our context. We can then write
+      </p>
+      <pre>
+        p       assumption; [@p]
+        ~ ~ p   by nni @p
+      </pre>
+      <p>
+        to obtain a new proof β where <code>β : proof (p |- ~ ~ p)</code>. We no longer need the assumption that the reference <code>@p</code> exists in the context &mdash; β will be a well-formed proof regardless of that.
+      </p>
+      
+      <h3><a name="boxes" href="#boxes">Boxes</a></h3>
+      <p>
+        A box is simply represented as a proof enclosed in parentheses:
+      </p>
+      <center><code>( <i>...proof...</i> )</code></center>
+      <p>
+        This underlines the fact that boxes are merely scoping delimiters as in normal programming language syntax. The proof inside the parentheses can use the assumption operator to introduce assumptions. The mechanism for referring to boxes is the same as that for referring to lines and will be introduced in the next subsection.
+      </p>
+
+      <h3><a name="chaining" href="#chaining">Chaining proofs together</a></h3>
+      <p>
+        Suppose we have produced the following two proofs:
+      </p>
+      <pre>
+          α : proof (Φ |- φ)
+          β : proof (Ψ |- χ)
+      </pre>
+      <p>
+        Furthermore, β may depend on a reference <code>@ref : ref (Φ |- φ)</code>. We can apply the <i>chain operator</i> <code>;</code> (semicolon) to connect α and β with each other, producing a new proof <code>γ : proof(|- χ)</code>:
+      </p>
+      <pre>
+        α        ; [@ref]
+        β
+      </pre>
+      <p>
+        The new proof <code>γ : proof (Ψ |- χ)</code> will no longer depend on a variable <code>@ref : ref (Φ |- φ)</code> to be available in the context.
+      </p>
+      <p>
+        We illustrate chaining by two concrete examples. For the first example, let α be the proof
+      </p>
+      <pre>
+        top     by top_i
+      </pre>
+      <p>
+        This depends on no references, and we have <code>α : proof (|- top)</code>. We let β be the proof
+      </p>
+      <pre>
+        top /\ top  by con_i @top @top
+      </pre>
+      <p>
+        If we assume that <code>@top : ref (|- top)</code> then we will have <code>β : proof(|- top /\ top)</code>. We can chain together these two proofs to obtain a single proof <code>γ : proof (|- top /\ top)</code> which no longer depends on <code>@ref</code>:
+      </p>
+      <pre>
+        top         by top_i ; [@top]
+        top /\ top  by con_i @top @top
+      </pre>
+
+      <p>
+        For the second example, we will let the first proof use local assumptions. Let <code>α : proof (p , |- ~ ~ p)</code> be the proof
+      </p>
+      <pre>
+      (  p        assumption; [@p]
+         ~ ~ p    by nni @p
+      )
+      </pre>
+      <p>
+        and, let <code>β : proof (|- p => ~ ~ p)</code> be the proof
+      </p>
+      <pre>
+        p => ~ ~ p  by imp_i #box
+      </pre>
+      <p>
+        We can then chain together the two proofs to obtain a proof <code>(α ; [#box] β) : |- p => ~ ~ p</code> as follows:
+      </p>
+      <pre>
+      (  p        assumption; [@p]
+         ~ ~ p    by nni @p
+      )           ; [#box]
+      p => ~ ~ p  by imp_i #box
+      </pre>
       
       <h1><a name="rule-reference" href="#rule-reference">Rule reference</a></h1>
       <p>
