@@ -126,6 +126,11 @@
           </ul>
         </li>
         <li><a href="#rule-reference">Rule reference</a></li>
+        <li><a href="#idioms">Idioms and avanced usage</a>
+          <ul>
+            <li><a href="#lemmas">Lemmas</a></li>
+          </ul>
+        </li>
       </ul>
       
       <h2><a name="introduction" href="#introduction">Introduction</a></h2>
@@ -699,14 +704,14 @@ r        by dis_e @dis #box1 #box2
         <tr>
           <td>=</td>
           <td><code>==</code></td>
-          <td><i>f(x) = g(y)</i></td><td>becomes</td><td><code>f x == g y</code></td>
+          <td><i>f(x,z) = g(y)</i></td><td>becomes</td><td><code>f x z == g y</code></td>
         </tr>
       </table>
 
       <p>
         Note that all operators <strong>must</strong> be surrounded by white-space, including prefix operators such as negation. For example, <code>~~q</code>, <code>~~ q</code> and <code>~ ~q</code> are not valid, but <code>~ ~ q</code> is.
       </p>
-
+      
       <h2><a name="sequents" href="#sequents">Sequents</a></h2>
       <p>
         Proof sequents are written almost exactly as in H&amp;R, with ⊢ written as <code>|-</code>, but with the caveat that the last premise before the turnstile must be followed by a rather awkward-looking comma. The syntax is best explained by a series of examples:
@@ -1086,6 +1091,83 @@ P s     assumption; [l1]
 P t     by eq_e ([x] P x) l1 l0.
 </pre></td><td><span class="open-example el el-circle-arrow-right"></span></td></tr>
       </table>
+
+      <h1><a name="idioms" href="#idioms">Idioms and advanced usage</a></h1>
+
+      <h2><a name="lemmas" href="#lemmas">Lemmas</a></h2>
+      <p>
+        BoxProver has limited support for defining lemmas, that is, proof blocks that can be reused later in other proofs.
+      </p>
+      <p>
+        For example, suppose that our proof system came without the PBC rule. We would then like to prove PBC <i>as a theorem</i> which we can then refer to in place of the actual rule. The effect of this is that the PBC theorem gets "inlined" for every invocation, effectively making its use invisible in the final proof.
+      </p>
+      <p>
+        For technical reasons, BoxProver cannot inline a proof of a sequent. Instead, we must formulate a lemma as a proof which has explicit, named holes for its premises. Whenever we want to use the lemma we must provide it with concrete references which can be inserted. For example, the PBC lemma looks as follows:
+      </p>
+
+      <table class="example-table">
+        <tr>
+          <td>
+            <table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="op">¬</span><span class="op">¬</span><span class="pred">p</span></td><td class="rule ">¬i <span class="hole">(@ref)</span></td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">2</td><td class="conc "><span class="pred">p</span></td><td class="rule ">¬¬e 1</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
+          </td>
+          <td>
+<pre>%abbrev
+pbc-lemma : {p}
+  ref (~ p , |- bot) -> proof (|- p) =
+[p][@ref]
+~ ~ p           by neg_i @ref ; [@nnp]
+p               by nne @nnp
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <p>
+        BoxProver will tell us that the proof of our lemma is unfinished, since it still contains a reference with no earlier justification. This is a limitation of the current implementation of BoxProver, in the future it might get support for distinguishing between reference holes introduced by underscore and holes introduced explicitly as "proof parameters", line in the example above.
+      </p>
+
+      <p>
+        The lemma can be used in all proofs declared after it. Simply begin a new proof (remember to prefix it with <code>%abbrev</code>!) and use the lemma as an ordinary rule:
+      </p>
+
+      <table class="example-table">
+        <tr>
+          <td>
+            <table class="boxproof"><tbody><tr><td class="line">1</td><td class="box "></td><td class="conc "><span class="pred">q</span></td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">2</td><td class="box "></td><td class="conc "><span class="op">¬</span><span class="pred">p</span><span class="op"> ∧ </span><span class="pred">q</span><span class="op"> → </span>⊥</td><td class="rule ">premise </td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">3</td><td class="box active open"></td><td class="conc open"><span class="op">¬</span><span class="pred">p</span></td><td class="rule open">assumption </td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">4</td><td class="box active "></td><td class="conc "><span class="op">¬</span><span class="pred">p</span><span class="op"> ∧ </span><span class="pred">q</span></td><td class="rule ">∧i 3, 1</td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box active"> </td><td class="conc"> </td><td class="rule"> </td><td class="box active"> </td></tr><tr><td class="line">5</td><td class="box active close"></td><td class="conc close">⊥</td><td class="rule close">→e 4, 2</td><td class="box active"></td></tr><tr class="empty"><td class="line"> </td><td class="box"> </td><td class="conc"> </td><td class="rule"> </td><td class="box"> </td></tr><tr><td class="line">6</td><td class="box "></td><td class="conc "><span class="op">¬</span><span class="op">¬</span><span class="pred">p</span></td><td class="rule ">¬i 3-5</td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr><tr><td class="line">7</td><td class="box "></td><td class="conc "><span class="pred">p</span></td><td class="rule ">¬¬e 6</td><td class="box "></td></tr><tr class="empty"><td class="line"> </td><td class="box"></td><td class="conc"> </td><td class="rule"> </td><td class="box"></td></tr></tbody></table>
+          </td>
+          <td>
+<pre>
+%abbrev
+pbc-lemma : {p}
+  ref (~ p , |- bot) -> proof (|- p) =
+[p][@ref]
+~ ~ p           by neg_i @ref ; [@nnp]
+p               by nne @nnp
+.
+%abbrev
+lemma-example : {p}{q}
+  proof (q , (~ p) /\ q => bot , |- p) =
+[p][q]
+q               premise; [@q]
+~ p /\ q => bot premise; [@imp]
+(   ~ p         assumption; [@np]
+    ~ p /\ q    by con_i @np @q ; [@con]
+    bot         by imp_e @con @imp
+)               ; [#box]
+p               by pbc-lemma p #box
+.
+</pre>
+          </td>
+          <td><span class="open-example el el-circle-arrow-right"></span></td>
+        </tr>
+      </table>
+
+      <p>
+        As a caveat, note that <code>pbc-lemma</code> as a rule takes <i>two</i> arguments: the first is the formula which will take the place for the propositional variable <code>p</code>, and the second is a reference to a box proving <code>bot</code> from <code>~ p</code>. You may replace the first argument with an underscore, since it can almost always be inferred uniquely from the reference.
+      </p>
+      
     </div>
   </body>
 </html>
