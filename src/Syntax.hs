@@ -45,6 +45,7 @@ data Obj = ObjTerm (Open Term)
 
 -- | A binder for a hypothetical object.
 data HypBinding = HypBinding { bindVar :: Maybe VarName
+                             , bindImplicit :: Bool
                              , bindTy :: ObjType
                              }
                 deriving (Eq, Ord, Show)
@@ -237,15 +238,16 @@ convertOpen :: (P -> a) -> A -> Open a
 convertOpen f (A bindings p) = Open (map convertHypothesis bindings) (f p)
 
 convertHypothesis :: Binding -> HypBinding
-convertHypothesis (mn, _, a@(A _ (P name _))) =
-  case name of
-    "term"    -> HypBinding mn (TermTy (convertOpen convertTermType a))
-    "prop"    -> HypBinding mn (PropTy (convertOpen convertPropType a))
-    "proof"   -> HypBinding mn (ProofTy (convertOpen convertProofType a))
-    "ref"     -> HypBinding mn (RefTy (convertOpen convertRefType a))
-    "sequent" -> HypBinding mn (SequentTy (convertOpen convertSequentConst a))
-    _         -> error $ concat ["Hypothetical object '"
-                                , show mn, "' has unknown type: ", show a]
+convertHypothesis b@(mn, _, a@(A _ (P name _))) =
+  HypBinding mn (isImplicit b) $
+     case name of
+       "term"    -> TermTy (convertOpen convertTermType a)
+       "prop"    -> PropTy (convertOpen convertPropType a)
+       "proof"   -> ProofTy (convertOpen convertProofType a)
+       "ref"     -> RefTy (convertOpen convertRefType a)
+       "sequent" -> SequentTy (convertOpen convertSequentConst a)
+       _         -> error $ concat ["Hypothetical object '"
+                                   , show mn, "' has unknown type: ", show a]
 
 convertVarName :: M -> VarName
 convertVarName (M [] (R (RVar x _) _)) = x

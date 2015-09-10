@@ -9,6 +9,7 @@
     var output;
     var prooftable;
     var prooftableData;
+    var errorMarkers = [];
 
     var hpos; // Position of horizontal splitter
     var vpos; // Position of vertical splitter
@@ -213,6 +214,7 @@
     var checkRequest = null;
     function checkProof()
     {
+        resetMarkers();
         if (checkRequest !== null)
             return;
         checkRequest = $.ajax(
@@ -231,12 +233,43 @@
             .always(function() { checkRequest = null; });
     }
 
+    function highlightErrors(twelfOutput) {
+        var twelfErrorRE =
+            /^[-=? \t]*(.+):([0-9]+)(\.([0-9]+))?(-([0-9]+)(\.([0-9]+))?)?.+(Error|Warning):/gm;
+        var m;
+        var aceRange = ace.require('ace/range').Range;
+        while ((m = twelfErrorRE.exec(twelfOutput)) !== null) {
+            if (m.index === twelfErrorRE.lastIndex) {
+                re.lastIndex++;
+            }
+            var rowFrom = new Number(m[2])-1;
+            var colFrom = new Number(m[4])-1;
+            var rowTo   = new Number(m[6])-1;
+            var colTo   = new Number(m[8])-1;
+            var type = rowFrom == rowTo ? "ace_error-marker" : "twelfMultiLineErrorMarker";
+            var marker = aceEditor
+                .getSession()
+                .addMarker(new aceRange(rowFrom, colFrom, rowTo, colTo),
+                           type,
+                           "text");
+            errorMarkers.push(marker);
+        }
+    }
+
+    function resetMarkers() {
+        $.each(errorMarkers, function(i, marker) {
+            aceEditor.getSession().removeMarker(marker);
+        });
+        errorMarkers = [];
+    }
+    
     function handleCheckResponse(response) {
         prooftableData = response;
         output.html('<pre><samp>' + response.output + '</samp></pre>');
         output.scrollTop(output.prop("scrollHeight"));
         prooftable.html('');
         if (!response.check) {
+            highlightErrors(response.output);
             if (enhanceCheckBox.prop('checked'))
                 playSound('trombone.wav');
             return;
@@ -411,6 +444,7 @@
         aceEditor.getSession().on("change", function() {
             var proof = aceEditor.getSession().getValue();
             optionalLocalStorageSetItem("proof", proof);
+            resetMarkers();
         });
     });
 })();

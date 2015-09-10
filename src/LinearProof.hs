@@ -25,20 +25,7 @@ data OpenLineProof = OpenLineProof [HypBinding] [ProofFragment]
   deriving (Eq, Ord, Show)
 
 isClosedProof :: OpenLineProof -> Bool
-isClosedProof (OpenLineProof bs frags) =
-  and [all isFuncOrPredHyp bs
-      ,all isClosedFragment frags]
-  where
-    isFuncOrPredHyp (HypBinding _ typ) =
-      not (isExoticPropTy typ || isExoticPropTy typ)
-    isClosedFragment frag =
-      case frag of
-      Line _ _ _ refs -> all isClosedRef refs
-      HoleLine _ _ _ _ -> False
-      Box _ _ frags' -> all isClosedFragment frags'
-      _ -> True
-    isClosedRef (LineRefHole _) = False
-    isClosedRef _ = True
+isClosedProof (OpenLineProof bs _) = all (not . bindImplicit) bs
 
 depth :: [ProofFragment] -> Int
 depth = foldr max 0 . map aux

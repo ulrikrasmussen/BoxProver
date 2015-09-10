@@ -96,3 +96,8 @@ body {
 #prooftable {
     overflow: auto;
 }
+
+.twelfMultiLineErrorMarker {
+    border-bottom: 1px dotted red;
+    position: absolute;
+}

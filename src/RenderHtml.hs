@@ -14,9 +14,6 @@ import qualified Data.Set as S
 import           LinearProof
 import           Syntax
 
-metaSpan :: String -> Html
-metaSpan = (H.span ! A.class_ "metasym") . fromString
-
 metaKindSpan :: String -> Html
 metaKindSpan = (H.span ! A.class_ "metakind") . fromString
 
@@ -35,12 +32,6 @@ opSpan = (H.span ! A.class_ "op") . fromString
 predSpan :: String -> Html
 predSpan = (H.span ! A.class_ "pred") . fromString
 
-contextSpan :: Html -> Html
-contextSpan = H.span ! A.class_ "context"
-
-exoticSpan :: String -> Html -> Html
-exoticSpan hint = H.span ! A.class_ "exotic" ! A.title (fromString hint)
-
 holeSpan :: Html -> Html
 holeSpan = H.span ! A.class_ "hole"
 
@@ -48,19 +39,21 @@ render :: OpenLineProof -> Html
 render l@(OpenLineProof hyps frags) = do
   let pclosed = H.p ! A.style "float: right;"
   if isClosedProof l then
-     pclosed ! A.class_ "closed-indicator" $ "Proof is closed!"
+     pclosed ! A.class_ "closed-indicator" $
+       "Proof is closed!"
   else
      pclosed ! A.class_ "open-indicator" $
        "Proof contains holes and/or higher-order objects."
-  renderFrags frags
+  let implicits = S.fromList [ x | b <- hyps, bindImplicit b, Just x <- [bindVar b] ]
+  renderFrags implicits frags
   H.h2 $ fromString "Proof context"
   renderProofHypotheses hyps
 
 parens :: Html -> Html
 parens h = parSpan "(" >> h >> parSpan ")"
 
-renderFrags :: [ProofFragment] -> Html
-renderFrags frags =
+renderFrags :: S.Set VarName -> [ProofFragment] -> Html
+renderFrags implicits frags =
   H.table ! A.class_ "boxproof" $ mapM_ (renderFrag 0 S.empty S.empty) frags
   where
     nboxcols = depth frags
@@ -92,18 +85,20 @@ renderFrags frags =
               H.td ! A.class_ (fromString $ unwords ["rule"]) $ " "
               boxcols True True l " "
       in case frag of
-         VarIntroduction l x -> line l (show l) x "" (renderReference "var" [])
+         VarIntroduction l x -> line l (show l) x "" (renderReference implicits "var" [])
          Line l sq rule refs ->
-           line l (show l) "" (renderSequent sq) (renderReference rule refs)
-         HoleLine l (ProofType bt) h _args ->
-           line l (show l) "" (holeSpan $ renderSequent bt) (holeSpan $ fromString h)
+           line l (show l) "" (renderSequent sq) (renderReference implicits rule refs)
+         HoleLine l (ProofType bt) h _args
+           | S.member h implicits ->
+             line l (show l) "" (holeSpan $ renderSequent bt) (holeSpan $ fromString h)
+           | otherwise -> line l (show l) "" (renderSequent bt) (fromString h)
          Box l1 l2 frags' ->
            let open' = S.insert l1 open
                close' = S.insert l2 close
             in mapM_ (renderFrag (d+1) open' close') frags'
 
-renderReference :: String -> [LineRef] -> Html
-renderReference rule refs = do
+renderReference :: S.Set VarName -> String -> [LineRef] -> Html
+renderReference implicits rule refs = do
   let ruleTable = (map (\(x,y) -> (x, fromString y))
                   [ ("top_i", "⊤i"), ("con_i", "∧i"), ("con_e1", "∧e₁"), ("con_e2", "∧e₂")
                   , ("dis_i1", "∨i₁"), ("dis_i2", "∨i₂"), ("dis_e","∨e"), ("imp_i","→i")
@@ -116,7 +111,9 @@ renderReference rule refs = do
         case r of
         LineRefSingle l' -> fromString $ show l'
         LineRefMulti l1 l2 -> fromString $ concat [show l1, "-", show l2]
-        LineRefHole h -> holeSpan $ fromString $ concat ["(",h,")"]
+        LineRefHole h
+           | S.member h implicits -> holeSpan $ fromString $ concat ["(",h,")"]
+           | otherwise -> fromString $ concat ["(",h,")"]
   _ <- (maybe (fromString rule) id (lookup rule ruleTable))
   _ <- fromString " "
   sequence_ (intersperse (fromString ", ") $ map renderLineRef refs)
@@ -125,19 +122,10 @@ renderProofHypotheses :: [HypBinding] -> Html
 renderProofHypotheses hyps =
   H.table ! A.class_ "hypotheses" $ mapM_ renderHyp hyps
   where
-    renderHyp (HypBinding mx typ) = H.tr $ do
-      H.td $ varDecoration typ $ fromString $ maybe "_" id mx
+    renderHyp (HypBinding mx implicit typ) = H.tr $ do
+      H.td $ (if implicit then holeSpan else id) $ fromString $ maybe "_" id mx
       H.td $ " : "
       H.td $ renderObjType typ
-    varDecoration typ
-        | isExoticTermTy typ =
-            exoticSpan ("This term has non-term dependencies and "
-                        ++ "is not a valid first-order object.")
-        | isExoticPropTy typ =
-            exoticSpan ("This proposition has non-term dependencies and "
-                             ++ "is not a valid first-order object.")
-        | isHoleTy typ = holeSpan
-        | otherwise = id
 
 renderObjType :: ObjType -> Html
 renderObjType (TermTy c@(Open hyps TermConst))

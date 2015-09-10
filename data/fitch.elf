@@ -1,5 +1,5 @@
-term : type. %name term X x.
-prop : type. %name prop P p.
+term : type. %name term X.
+prop : type. %name prop P.
 
 /\   : prop -> prop -> prop.
 \/   : prop -> prop -> prop.
