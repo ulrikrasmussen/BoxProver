@@ -227,14 +227,14 @@ ex1-14 : {p}{q}{r}
   proof (p => (q => r)
         , |- p /\ q => r) =
 [p][q][r]
-p => (q => r)   assumption; [l1]
-(   p /\ q      assumption; [l2]
-    p           by con_e1 l2 ; [l3]
-    q           by con_e2 l2 ; [l4]
-    q => r      by imp_e l3 l1 ; [l5]
-    r           by imp_e l4 l5
-)               ; [l2-6]
-p /\ q => r     by imp_i l2-6.
+p => (q => r)   premise; [@prem]
+(   p /\ q      assumption; [@assump]
+    p           by con_e1 @assump ; [@p]
+    q           by con_e2 @assump ; [@q]
+    q => r      by imp_e @p @prem ; [@qr]
+    r           by imp_e @q @qr
+)               ; [#box]
+p /\ q => r     by imp_i #box.
 </pre>
           </td>
           <td><span class="open-example el el-circle-arrow-right"></span></td>
@@ -242,7 +242,7 @@ p /\ q => r     by imp_i l2-6.
       </table>
 
       <p>
-        Local assumptions are simply represented by parentheses, with the caveat that the closing parenthesis must be followed by a semicolon and a name in brackets. All line references introduced inside the parentheses are invisible outside the parentheses (effictively introducing a <i>nested scope</i> similarly to scoping in programming languages), including the assumption made on Line 2. The name <code>l2-6</code> becomes a reference to the whole box and can be used in rules expecting a "box" premise.
+        Local assumptions are simply represented by parentheses, with the caveat that the closing parenthesis must be followed by a semicolon and a name in brackets. All line references introduced inside the parentheses are invisible outside the parentheses (effictively introducing a <i>nested scope</i> similarly to scoping in programming languages), including the assumption made on Line 2. The name <code>#box</code> becomes a reference to the whole box and can be used in rules expecting a "box" premise.
       </p>
 
       <p>
@@ -256,21 +256,21 @@ ex1-14 : {p}{q}{r}
   proof (p => (q => r)
         , |- p /\ q => r) =
 [p][q][r]
-p => (q => r)   assumption;      [l1:ref (|- p => (q => r))]
-(   p /\ q      assumption;      [l2:ref (|- p /\ q)]
-    p           by con_e1 l2 ;   [l3:ref (|- p)]
-    q           by con_e2 l2 ;   [l4:ref (|- q)]
-    q => r      by imp_e l3 l1 ; [l5:ref (|- q => r)]
-    r           by imp_e l4 l5
-)               ;                [l2-6 : ref (p /\ q , |- r)]
-p /\ q => r     by imp_i l2-6.
+p => (q => r) premise;            [@prem   : ref (|- p => q => r)]
+(   p /\ q    assumption;         [@assump : ref (|- p /\ q)]
+    p         by con_e1 @assump ; [@p      : ref (|- p)]
+    q         by con_e2 @assump ; [@q      : ref (|- q)]
+    q => r    by imp_e @p @prem ; [@qr     : ref (|- q => r)]
+    r         by imp_e @q @qr
+)             ;                   [#box    : ref (p /\ q , |- r)]
+p /\ q => r   by imp_i #box.
 </pre>
           </td>
           <td><span class="open-example el el-circle-arrow-right"></span></td>
         </tr>
       </table>
       <p>
-        Note that every reference is typed by a <i>sequent</i> which for every single-line reference has no premises, and which for the "box" reference has a single premise and a single conclusion. That is, the annotation <code>l2-6 : ref (p /\ q , |- r)</code> indicates that lines 2 to 6 is a proof of the sequent <i>p ∧ q ⊢ r</i>.
+        Note that every reference is typed by a <i>sequent</i> which for every single-line reference has no premises, and which for the "box" reference has a single premise. That is, the annotation <code>#box : ref (p /\ q , |- r)</code> indicates that lines 2 to 6 forms a valid proof of the sequent <i>p ∧ q ⊢ r</i>.
       </p>
 
       <h2><a name="interactive-proving" href="#interactive-proving">Interactive proving</a></h2>

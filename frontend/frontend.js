@@ -177,6 +177,16 @@
     function onEnhanceClickHandler() {
         optionalLocalStorageSetItem("enhance", enhanceCheckBox.prop('checked'));
     }
+
+    function onThemeSelectChange(e) {
+        setTheme($('option:selected', e.target).val());
+    }
+
+    function setTheme(theme) {
+        var theme = theme || optionalLocalStorageGetItem('theme') || 'ace/theme/chrome';
+        aceEditor.setTheme(theme);
+        optionalLocalStorageSetItem('theme', theme);
+    }
     
     function onHSplitterMouseDownHandler() {
         function hideHWindows() {
@@ -323,6 +333,17 @@
         return b;
     }
 
+    function populateThemeSelect(themeList, themeSelect)
+    {
+        $.each(themeList.themes, function(i, theme) {
+            $('<option/>',
+              { value : theme.theme,
+                selected : aceEditor.getTheme() === theme.theme })
+                .text(theme.caption)
+                .appendTo(themeSelect);
+        });
+    }
+    
     $().ready(function() {
         main         = $("#main");
         editor       = $("#editor");
@@ -339,9 +360,11 @@
         helpButton   = $("#help");
         printButton  = $("#print");
         enhanceCheckBox = $("#enhance");
+        themeSelect  = $("#theme");
         
         aceEditor = ace.edit("editor");
-        aceEditor.setTheme("ace/theme/chrome");
+        //aceEditor.setTheme("ace/theme/chrome");
+        setTheme();
         aceEditor.commands.addCommand({
             name: 'CheckCommand',
             bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
@@ -351,7 +374,10 @@
             readOnly: true
         });
         aceEditor.getSession().setMode("ace/mode/boxprover");
-        
+
+        var themeList = ace.require("ace/ext/themelist");
+        populateThemeSelect(themeList, themeSelect);
+
         setInitialLayout();
         updateLayout();
 
@@ -366,6 +392,7 @@
         printButton.click(onPrintClickHandler);
         helpButton.click(function() { window.open("help.html");  });
         enhanceCheckBox.click(onEnhanceClickHandler);
+        themeSelect.change(onThemeSelectChange);
 
         query = getQueryParameters();
         if ("proof" in query)
