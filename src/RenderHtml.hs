@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE OverloadedStrings #-}
 module RenderHtml where
 
@@ -5,7 +6,7 @@ import           Data.String
 import           Data.List (intersperse)
 
 import           Control.Monad
-
+                 
 import           Text.Blaze.Html5 (Html, (!))
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
@@ -16,6 +17,9 @@ import           Syntax
 
 metaKindSpan :: String -> Html
 metaKindSpan = (H.span ! A.class_ "metakind") . fromString
+
+metaQuantifierSpan :: String -> Html
+metaQuantifierSpan = (H.span ! A.class_ "metaquantifier") . fromString
 
 varSpan :: String -> Html
 varSpan = (H.span ! A.class_ "var") . fromString
@@ -34,6 +38,9 @@ predSpan = (H.span ! A.class_ "pred") . fromString
 
 holeSpan :: Html -> Html
 holeSpan = H.span ! A.class_ "hole"
+
+cdots :: Html
+cdots = H.span ! A.class_ "cdots" $ fromString "⋯"
 
 render :: OpenLineProof -> Html
 render l@(OpenLineProof hyps frags) = do
@@ -118,6 +125,8 @@ renderReference implicits rule refs = do
   _ <- fromString " "
   sequence_ (intersperse (fromString ", ") $ map renderLineRef refs)
 
+-- Render a tabular representation of the full proof context, including implicit
+-- hypotheses.
 renderProofHypotheses :: [HypBinding] -> Html
 renderProofHypotheses hyps =
   H.table ! A.class_ "hypotheses" $ mapM_ renderHyp hyps
@@ -126,36 +135,34 @@ renderProofHypotheses hyps =
       H.td $ (if implicit then holeSpan else id) $ fromString $ maybe "_" id mx
       H.td $ " : "
       H.td $ renderObjType typ
-
-renderObjType :: ObjType -> Html
-renderObjType (TermTy c@(Open hyps TermConst))
-    | all (isClosedTermTy . bindTy) hyps =
-        let arity = length hyps in
-        if arity == 0 then metaKindSpan "Constant" else
-            metaKindSpan "Term" >> parens (fromString $ show arity)
-    | otherwise = renderContextual (const (metaKindSpan "Term")) c
-renderObjType (PropTy c@(Open hyps PropConst))
-    | all (isClosedTermTy . bindTy) hyps =
-        let arity = length hyps in
-        if arity == 0 then metaKindSpan "Proposition" else
-            metaKindSpan "Predicate" >> parens (fromString $ show arity)
-    | otherwise = renderContextual (const (metaKindSpan "Proposition")) c
-renderObjType (RefTy c) =
-    renderContextual
-      (\(RefType bt) -> metaKindSpan "Ref to " >> (renderSequent bt))
-      c
-renderObjType (SequentTy c) =
-    renderContextual (const (metaKindSpan "Sequent")) c
-renderObjType (ProofTy c) =
-    flip renderContextual c $
-      \(ProofType bt) -> metaKindSpan "Proof of " >> (renderSequent bt)
-
-renderContextual :: (a -> Html) -> Open a -> Html
-renderContextual f (Open [] a) = f a
-renderContextual f (Open bindings a) = do
-  f a
-  H.div ! A.class_ "context-separator" $ "with context"
-  H.div ! A.class_ "context" $ renderProofHypotheses bindings
+    renderObjType :: ObjType -> Html
+    renderObjType (TermTy c@(Open hyps' TermConst))
+        | all (isClosedTermTy . bindTy) hyps' =
+            let arity = length hyps' in
+            if arity == 0 then metaKindSpan "Constant" else
+                metaKindSpan "Term" >> parens (fromString $ show arity)
+        | otherwise = renderContextual (const (metaKindSpan "Term")) c
+    renderObjType (PropTy c@(Open hyps' PropConst))
+        | all (isClosedTermTy . bindTy) hyps' =
+            let arity = length hyps' in
+            if arity == 0 then metaKindSpan "Proposition" else
+                metaKindSpan "Predicate" >> parens (fromString $ show arity)
+        | otherwise = renderContextual (const (metaKindSpan "Proposition")) c
+    renderObjType (RefTy c) =
+        renderContextual
+          (\(RefType bt) -> metaKindSpan "Ref to " >> (renderSequent bt))
+          c
+    renderObjType (SequentTy c) =
+        renderContextual (const (metaKindSpan "Sequent")) c
+    renderObjType (ProofTy c) =
+        flip renderContextual c $
+          \(ProofType bt) -> metaKindSpan "Proof of " >> (renderSequent bt)
+    renderContextual :: (a -> Html) -> Open a -> Html
+    renderContextual f (Open [] a) = f a
+    renderContextual f (Open bindings a) = do
+      f a
+      H.div ! A.class_ "context-separator" $ "with context"
+      H.div ! A.class_ "context" $ renderProofHypotheses bindings
 
 type Precedence = Int
 data Fixity = FixPrefix | FixInfix Assoc | FixPostfix
@@ -253,3 +260,59 @@ renderSequent (Sequent as c) =
   where
     aux (Left x) = varSpan x >> fromString ":" >> metaKindSpan "Term"
     aux (Right phi) = renderFormula phi
+
+---- Render a compact representation of an open object, excluding implicit
+---- hypotheses.
+renderOpen :: (a -> Html) -> Open a -> Html
+renderOpen f (Open hyps a) =
+  quantification >> derivations >> rest
+  where
+    explicitHyps = filter (not . bindImplicit) hyps
+    (subjects, hyps')   = span (\h -> isSubject (bindTy h)) explicitHyps
+    (judgments, hyps'') = span (\h -> isJudgment (bindTy h)) hyps'
+
+    quantification
+      | null subjects || null judgments = return ()
+      | otherwise     = do metaQuantifierSpan "for all "
+                           mapM_ subj subjects
+                           fromString ", "
+    derivations
+      | null judgments = return ()
+      | otherwise      = do --metaQuantifierSpan "using "
+                            mapM_ judg judgments
+                            cdots
+    rest | null hyps'' = f a
+         | otherwise   = renderOpen f (Open hyps'' a)
+
+    subj (HypBinding Nothing _ _) = return ()
+    subj (HypBinding (Just x) _ ty) =
+      case ty of
+      TermTy (Open hs TermConst) ->
+        do varSpan x
+           H.sup . fromString $ concat ["(",show $ length hs,")"]
+           fromString " "
+      PropTy (Open hs PropConst) ->
+        do varSpan x
+           when (not . null $ hs) $
+             H.sup . fromString $ concat ["(",show $ length hs,")"]
+           fromString " "
+      -- We don't really know how to render explicit quantification of sequents.
+      -- Use cases are also quite limited.
+      SequentTy (Open _hs SequentConst) -> return ()
+      -- Remaining cases shouldn't happen
+      _ -> return ()
+    judg (HypBinding _ _ ty) =
+      case ty of
+      ProofTy (Open hs (ProofType sq)) ->
+        parens (renderOpen renderSequent (Open hs sq)) >> fromString " "
+      RefTy (Open hs (RefType sq)) ->
+        parens (renderOpen renderSequent (Open hs sq)) >> fromString " "
+      -- Remaining cases should not happen
+      _ -> return ()
+      
+
+    isSubject (PropTy _)    = True
+    isSubject (TermTy _)    = True
+    isSubject (SequentTy _) = True
+    isSubject _             = False
+    isJudgment = not . isSubject

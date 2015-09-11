@@ -74,6 +74,15 @@ table.boxproof {
     font-family: sans-serif;
 }
 
+.metaquantifier {
+    font-style: italic;
+}
+
+.cdots {
+    font-weight: bold;
+    padding: 0px 10px;
+}
+
 .exotic {
     background-color: #f9f;
 }

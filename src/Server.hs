@@ -106,8 +106,8 @@ checkHandler = do
                 , "closed" .= Bool (isClosedProof linearProof)
                 ]
               | (n, a, m) <- defns
-              , let opt@(Open _ (_, sq)) = convertOpenProofTerm a m
-              , let sequentmarkup = renderMarkup $ renderSequent sq
+              , let opt@(Open hs (_, sq)) = convertOpenProofTerm a m
+              , let sequentmarkup = renderMarkup $ renderOpen renderSequent (Open hs sq)
               , let linearProof = linearize $ opt
               , let proofmarkup = renderMarkup $ render linearProof
               ])
