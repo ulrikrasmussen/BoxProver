@@ -110,6 +110,7 @@ check :: (MonadMask m, MonadIO m)
       => String -> String -> String -> m (Either String (String, [(String, A, M)]))
 check twelfServer fitchPath declString =
     catch
-      (withTwelfServer twelfServer False $ check' fitchPath declString
-       >>= return . Right)
+      (withTwelfServer twelfServer False $ do
+       res <- check' fitchPath declString
+       return . Right $ res)
       (\(CheckException err) -> return . Left $ err)

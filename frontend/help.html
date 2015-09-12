@@ -1108,7 +1108,7 @@ P t     by eq_e ([x] P x) l1 l0.
       <table class="example-table">
         <tr>
           <td>
-            <table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="op">¬</span><span class="op">¬</span><span class="pred">p</span></td><td class="rule ">¬i <span class="hole">(@ref)</span></td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">2</td><td class="conc "><span class="pred">p</span></td><td class="rule ">¬¬e 1</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
+<table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="op">¬</span><span class="op">¬</span><span class="pred">p</span></td><td class="rule ">¬i (@ref)</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr><tr><td class="line">2</td><td class="conc "><span class="pred">p</span></td><td class="rule ">¬¬e 1</td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
           </td>
           <td>
 <pre>%abbrev
@@ -1125,7 +1125,14 @@ p               by nne @nnp
       </table>
 
       <p>
-        BoxProver will tell us that the proof of our lemma is unfinished, since it still contains a reference with no earlier justification. This is a limitation of the current implementation of BoxProver, in the future it might get support for distinguishing between reference holes introduced by underscore and holes introduced explicitly as "proof parameters", line in the example above.
+        BoxProver will tell us that we have proved the following:
+      </p>
+      <p>
+        <center><span class="metaquantifier">for all </span><span class="var">p</span> , <span class="par">(</span><span class="op">¬</span><span class="pred">p</span> ⊢ ⊥<span class="par">)</span> <span class="cdots">⋯</span><span class="pred">p</span></center>
+        </p>
+      
+      <p>
+        This should be read as follows: "for all propositions p, if there is a proof of (¬p ⊢ ⊥) then there is a proof of ⊢ p".
       </p>
 
       <p>
@@ -1167,7 +1174,6 @@ p               by pbc-lemma p #box
       <p>
         As a caveat, note that <code>pbc-lemma</code> as a rule takes <i>two</i> arguments: the first is the formula which will take the place for the propositional variable <code>p</code>, and the second is a reference to a box proving <code>bot</code> from <code>~ p</code>. You may replace the first argument with an underscore, since it can almost always be inferred uniquely from the reference.
       </p>
-      
     </div>
   </body>
 </html>

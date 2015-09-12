@@ -10,6 +10,7 @@ import qualified Data.ByteString.Lazy as BL
 import           Data.Maybe (isJust, fromJust)
 import           Data.String (fromString)
 import           Data.Text.Lazy (toStrict)
+import qualified Data.Time as Time
 import qualified Data.Vector as V
 import           Snap.Core
 import           Snap.Http.Server
@@ -27,18 +28,21 @@ import           RenderHtml
 data CustomConfig = CustomConfig
                     { twelfBinPath :: Maybe String
                     , baseSigPath :: Maybe String
+                    , checkLogPath :: Maybe String
                     }
                     deriving (Eq, Show)
 
 emptyCustomConfig :: CustomConfig
 emptyCustomConfig = CustomConfig { twelfBinPath = Nothing
                                  , baseSigPath = Nothing
+                                 , checkLogPath = Nothing
                                  }
 
 combineCustomConfig :: CustomConfig -> CustomConfig -> CustomConfig
 combineCustomConfig c1 c2 =
   CustomConfig { twelfBinPath = twelfBinPath c2 <|> twelfBinPath c1
-               , baseSigPath = baseSigPath c2 <|> baseSigPath c1
+               , baseSigPath  = baseSigPath c2  <|> baseSigPath c1
+               , checkLogPath = checkLogPath c2 <|> checkLogPath c1
                }
 
 options :: (MonadSnap m) => [OptDescr (Maybe (Config m CustomConfig))]
@@ -46,16 +50,21 @@ options =
   optDescrs emptyConfig ++
   [ Option [] ["twelf-server"] (ReqArg setTS "PATH") "path to twelf-server binary"
   , Option [] ["base-sig"] (ReqArg setBS "PATH") "path to base signature definition"
+  , Option [] ["check-log"] (OptArg setCP "PATH") "path to check request log"
   ]
   where
     setBS p = Just $ setOther (emptyCustomConfig { baseSigPath = Just p }) emptyConfig
     setTS p = Just $ setOther (emptyCustomConfig { twelfBinPath = Just p }) emptyConfig
+    setCP p = Just $ setOther (emptyCustomConfig { checkLogPath = p }) emptyConfig
 
 getTwelfBinPath :: (MonadReader CustomConfig m) => m String
 getTwelfBinPath = asks (fromJust . twelfBinPath)
 
 getBaseSigPath :: (MonadReader CustomConfig m) => m String
 getBaseSigPath = asks (maybe "fitch.elf" id . baseSigPath)
+
+getCheckLogPath :: (MonadReader CustomConfig m) => m (Maybe String)
+getCheckLogPath = asks checkLogPath
 
 main :: IO ()
 main = do
@@ -74,6 +83,23 @@ site =
           ] <|>
     serveDirectory "./frontend"
 
+logProof :: BS.ByteString -> ReaderT CustomConfig Snap ()
+logProof proof = do
+  mp <- getCheckLogPath
+  flip (maybe (return ())) mp $ \p -> do
+    req <- getRequest
+    let remoteAddr = rqRemoteAddr req
+    t <- liftIO Time.getCurrentTime
+    liftIO $ BS.appendFile p $ BS.concat [
+        "["
+      , remoteAddr
+      , " - "
+      , fromString $ show t
+      , "]\n"
+      , proof
+      , "\n\n"
+      ]
+
 checkHandler :: ReaderT CustomConfig Snap ()
 checkHandler = do
   let missingProofResponse = do
@@ -84,6 +110,7 @@ checkHandler = do
   let writeObj = writeBS . BS.concat . BL.toChunks . encode . object
   mproof <- getParam "proof"
   proof <- maybe missingProofResponse return mproof
+  logProof proof
   bin <- getTwelfBinPath
   fitch <- getBaseSigPath
   checkResult <- liftIO $ check bin fitch (BS.unpack proof)
