@@ -208,12 +208,12 @@ renderFormula phi = let (_, s) = go phi in s
       Conj p1 p2 -> showInfixOp (3, FixInfix AssocNone) (opSpan " ∧ ") (go p1) (go p2)
       Disj p1 p2 -> showInfixOp (3, FixInfix AssocNone) (opSpan " ∨ ") (go p1) (go p2)
       Imp p1 p2  -> showInfixOp (1, FixInfix AssocRight) (opSpan " → ") (go p1) (go p2)
-      Neg p'     -> showPrefixOp (4, FixPrefix) (opSpan "¬") (go p')
+      Neg p'     -> showPrefixOp (5, FixPrefix) (opSpan "¬") (go p')
       Pred q ts  -> showConst $ predSpan q >> objsListHtml ts
       Eq t1 t2   -> showConst $ renderTerm t1 >> predSpan " = " >> renderTerm t2
-      All x phi' -> showPrefixOp (2, FixPrefix)
+      All x phi' -> showPrefixOp (4, FixPrefix)
                                  (opSpan "∀" >> varSpan x >> fromString " ") (go phi')
-      Exi x phi' -> showPrefixOp (2, FixPrefix)
+      Exi x phi' -> showPrefixOp (4, FixPrefix)
                                  (opSpan "∃" >> varSpan x >> fromString " ") (go phi')
 
 objsListHtml :: [Obj] -> Html
