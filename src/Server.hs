@@ -9,6 +9,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Maybe (isJust, fromJust)
 import           Data.String (fromString)
+import           Data.Text.Encoding (encodeUtf8)
 import           Data.Text.Lazy (toStrict)
 import qualified Data.Time as Time
 import qualified Data.Vector as V
@@ -20,10 +21,11 @@ import           System.Exit
 import           System.IO
 import           Text.Blaze.Renderer.Text
 
+import           LinearProof
+import qualified RenderData as RD
+import           RenderHtml
 import           Syntax
 import           TwelfInterface
-import           LinearProof
-import           RenderHtml
 
 data CustomConfig = CustomConfig
                     { twelfBinPath :: Maybe String
@@ -80,6 +82,7 @@ site :: ReaderT CustomConfig Snap ()
 site =
     ifTop (redirect "index.html") <|>
     route [ ("check", checkHandler)
+          , ("export", exportHandler)
           ] <|>
     serveDirectory "./frontend"
 
@@ -139,3 +142,21 @@ checkHandler = do
               , let proofmarkup = renderMarkup $ render linearProof
               ])
         ]
+
+exportHandler :: ReaderT CustomConfig Snap ()
+exportHandler = do
+  proof <- readRequestBody (42 * 1024)
+  modifyResponse $ setHeader "Content-Type" "text/plain"
+  bin <- getTwelfBinPath
+  fitch <- getBaseSigPath
+  proofDecoded <- maybe (error "url decode error") return $ urlDecode $ BL.toStrict $ proof
+  checkResult <- liftIO $ check bin fitch (BS.unpack $ proofDecoded)
+  case checkResult of
+    Left err -> writeBS $ "Error: " `BS.append` (fromString err)
+    Right (_resp, defns) ->
+      forM_ defns $ \(_n, a, m) ->
+        let opt@(Open _hs (_, sq)) = convertOpenProofTerm a m
+            OpenLineProof _ frags = linearize opt
+        in case RD.renderLinearProof sq frags of
+             Left err -> writeBS $ "Error: " `BS.append` (fromString err)
+             Right txt -> writeBS $ encodeUtf8 $ txt
