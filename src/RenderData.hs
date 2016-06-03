@@ -16,6 +16,9 @@ lst xs = "[" `append` (intercalate "," xs) `append` "]"
 int :: Int -> Text
 int = pack . show
 
+str :: Text -> Text
+str x = "\"" `append` x `append` "\""
+
 renderLinearProof :: Sequent -> [ProofFragment] -> Either String Text
 renderLinearProof seq' frags = do
   seqT <- renderSequent seq'
@@ -31,19 +34,25 @@ renderSequent (Sequent ant con) = do
   return $ ctor "Sequent" [antT, conT]
 
 renderFragment :: ProofFragment -> Either String Text
-renderFragment (Line i seq' ruleName refs) = do
-  seqT <- renderSequent seq'
+renderFragment (Line i (Sequent _ con) ruleName refs) = do
+  conFormula <- either (const $ Left "Cannot export sequent with hole in it") Right con
+  conT <- ctor "SOME" . (:[]) <$> renderFormula conFormula
   ruleNameT <- renderRuleName ruleName
   refsT <- lst <$> mapM renderLineRef refs
-  return $ ctor "Line" [int i, seqT, ruleNameT, refsT]
-renderFragment (Box _i _j frags) = Data.Text.concat <$> mapM renderFragment frags
+  return $ ctor "" [conT, ruleNameT, refsT, str . int $ i]
+renderFragment (Box i j frags) = do
+  fragTs <- mapM renderFragment frags
+  let discharge = ctor "" ["NONE", "Dis", lst [ctor "Line" [str . int $ i]], str ""]
+  let ls = fragTs ++ [discharge]
+  return $ intercalate "," ls
 renderFragment (HoleLine _ _ _ _) = throwError "Cannt export line holes"
-renderFragment (VarIntroduction _ _) = throwError "Cannot export variable introdoction"
+renderFragment (VarIntroduction _ _) = throwError "Cannot export variable introduction"
 
 renderRuleName :: RuleName -> Either String Text
 renderRuleName rn =
   case rn of
     "assumption" -> return "Ass"
+    "premise" -> return "Prm"
     "copy" -> return "Cpy"
     "con_i" -> return "Ain"
     "con_e1" -> return "Ae1"
@@ -64,8 +73,8 @@ renderRuleName rn =
     _ -> throwError $ "Cannot export rule name: " ++ show rn
 
 renderLineRef :: LineRef -> Either String Text
-renderLineRef (LineRefSingle i) = return $ ctor "LineRefSingle" [int i]
-renderLineRef (LineRefMulti i j) = return $ ctor "LineRefMulti" [int i, int j]
+renderLineRef (LineRefSingle i) = return $ ctor "Line" [str . int $ i]
+renderLineRef (LineRefMulti i j) = return $ ctor "Box" [str . int $ i, str . int $ j]
 renderLineRef (LineRefHole _) = throwError "Cannot export reference hole"
 
 renderFormula :: Formula -> Either String Text
