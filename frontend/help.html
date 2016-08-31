@@ -302,7 +302,7 @@ _
 <table class="boxproof"><tbody><tr><td class="line">1</td><td class="conc "><span class="hole"><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span>, <span class="op">¬</span><span class="pred">r</span>, <span class="pred">p</span> ⊢ <span class="pred">q</span></span></td><td class="rule "><span class="hole">Alpha#1</span></td></tr><tr class="empty"><td class="line"> </td><td class="conc"> </td><td class="rule"> </td></tr></tbody></table>
 
       <p>
-        <code>Alpha#1</code> is an auto-generated name for the hole, and it tells us that we need to prove <i>q</i> using assumptions/premises <i>p ∧ q → r</i>, <i>¬r</i> and <i>p</i>. The red color indicates that the proof is not yet finished. Below the proof, BoxProver will also produce an overview of the <i>proof context</i> which tells you what objects and assumptions are available to the proof that needs to be filled in for the hole. This is especially useful if you have a large proof and you have lost track of what assumptions are available in your context.
+        <code>Alpha#1</code> is an auto-generated name for the hole, and it tells us that we need to prove <i>q</i> using assumptions/premises <i>p ∧ q → r</i>, <i>¬r</i> and <i>p</i>. The red color indicates that the proof is not yet finished. Below the proof, BoxProver will also produce an overview of the local assumptions available to the proof that needs to be filled in for the hole. This is especially useful if you have a large proof and you have lost track of what assumptions you have introduced.
       </p>
       <p>
       Let us go ahead and introduce the three premises, followed by another hole:
@@ -355,7 +355,7 @@ q                   by nne _
       </table>
 
       <p>
-        In the above, we inserted a hole for a reference instead of a proof. The context information will tell us that <code>Ref#1</code> needs to be replaced with a concrete reference to a line concluding <i>¬¬q</i>.
+        In the above, we inserted a hole for a reference instead of a proof. Below the rendered proof, BoxProver will tell us that <code>Ref#1</code> needs to be replaced with a concrete reference to a line concluding <i>¬¬q</i>.
       </p>
       <p>
         Our plan is to show <i>¬¬q</i> using the <i>¬i</i> rule. This rule invocation must be inserted <i>before</i> the application of <i>¬¬e</i>, and it must be given a reference to a <i>box</i> which proves <i>⊥</i> by assuming <i>¬q</i>. We insert this line into our proof and put a hole for the reference:
@@ -384,7 +384,7 @@ q                   by nne @n-n-q
       </table>
 
       <p>
-        The context information (not shown here) tells us that <code>Ref#1</code> must be a reference to a proof of the sequent <i>¬q ⊢ ⊥</i>. To produce a proof with an assumption, we need to make a new box. The contents of boxes can also be replaced by holes:
+        BoxProver will now tell us that <code>Ref#1</code> must be a reference to a proof of the sequent <i>¬q ⊢ ⊥</i>. To produce a proof with an assumption, we need to make a new box. The contents of boxes can also be replaced by holes:
       </p>
 
       <table class="example-table">
@@ -441,17 +441,17 @@ q                   by nne @n-n-q
       </table>
 
       <p>
-        We now need to produce a proof of <i>⊥</i> which will be inserted at line 5. At this point, we can look at the proof context to get an overview of the assumptions that will be available to us:
+        We now need to produce a proof of <i>⊥</i> which will be inserted at line 5. At this point, we can look below the rendered proof to get an overview of the assumptions that will be available to us:
       </p>
 
-<table class="hypotheses"><tbody><tr><td><span class="hole">Alpha#1</span></td><td> : </td><td><span class="metakind">Proof of </span>⊥<div class="context-separator">with context&nbsp;<i class="el el-caret-up"></i></div><div class="context"><table class="hypotheses"><tbody><tr><td>p</td><td> : </td><td><span class="metakind">Proposition</span></td></tr><tr><td>q</td><td> : </td><td><span class="metakind">Proposition</span></td></tr><tr><td>r</td><td> : </td><td><span class="metakind">Proposition</span></td></tr><tr><td><span class="hole">_</span></td><td> : </td><td><span class="metakind">Ref to </span><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td></tr><tr><td><span class="hole">_</span></td><td> : </td><td><span class="metakind">Ref to </span><span class="op">¬</span><span class="pred">r</span></td></tr><tr><td><span class="hole">_</span></td><td> : </td><td><span class="metakind">Ref to </span><span class="pred">p</span></td></tr><tr><td><span class="hole">_</span></td><td> : </td><td><span class="metakind">Ref to </span><span class="op">¬</span><span class="pred">q</span></td></tr></tbody></table></div></td></tr><tr><td>p</td><td> : </td><td><span class="metakind">Proposition</span></td></tr><tr><td>q</td><td> : </td><td><span class="metakind">Proposition</span></td></tr><tr><td>r</td><td> : </td><td><span class="metakind">Proposition</span></td></tr></tbody></table>
+<table class="hypotheses"><tbody><tr><td><span class="hole">Alpha#1</span></td><td> : </td><td><span class="metakind">Proof of </span>⊥<div class="context-separator">with premise(s) and assumption(s)&nbsp;<i class="el el-caret-up"></i></div><div class="context"><table class="hypotheses"><tbody><tr><td></td><td></td><td><span class="pred">p</span><span class="op"> ∧ </span><span class="op">¬</span><span class="pred">q</span><span class="op"> → </span><span class="pred">r</span></td></tr><tr><td></td><td></td><td><span class="op">¬</span><span class="pred">r</span></td></tr><tr><td></td><td></td><td><span class="pred">p</span></td></tr><tr><td></td><td></td><td><span class="op">¬</span><span class="pred">q</span></td></tr></tbody></table></div></td></tr></tbody></table>
 
       <p>
         As can easily be verified, this just says that all the conclusions at lines 1,2,3 and 4 are available in line 5. Unfortunately the line names are not provided in the current version of BoxProver &mdash; this may change in the future.
       </p>
 
       <p>
-        We can see that the context contains enough references to prove the premise of the implication. This can then be eliminated to produce <i>r</i>, and finally we can prove <i>⊥</i> since we had <i>¬r</i> as a premise. We fill out the rest of the proof and check that there are no holes left:
+        The last two assumptions can be used to prove the premise of the implication. The implication can then be eliminated to produce <i>r</i>, and finally we can prove <i>⊥</i> since we had <i>¬r</i> as a premise. We fill out the rest of the proof and check that there are no holes left:
       </p>
 
       <table class="example-table">
@@ -567,7 +567,7 @@ _
       </table>
 
       <p>
-        Since the two boxes are not used anywhere, BoxProver cannot figure out what they are supposed to prove, and thus inserts generic placeholders called <code>Sequent#1</code> and <code>Sequent#2</code>. The parameters indicate that the unknown sequents <i>may</i> contain objects from the context.
+        Since the two boxes are not used anywhere, BoxProver cannot figure out what they are supposed to prove, and thus inserts generic placeholders called <code>Sequent#1</code> and <code>Sequent#2</code>. The parameters <code>(p, q, r, ...)</code> are lists of propositional variables which the unknown sequents <i>may</i> mention.
       </p>
 
       <p>
@@ -806,14 +806,14 @@ r        by dis_e @dis #box1 #box2
       </p>
       <center><code>~ ~ p by nni @p</code></center>
       <p>
-        This will be a valid proof <code>α : proof (|- ~ ~ p)</code> if we assume that <code>@p : ref (|- p)</code> is available in our context. We can then write
+        This will be a valid proof <code>α : proof (|- ~ ~ p)</code> if we assume that <code>@p : ref (|- p)</code> is available as an assumption. We can then write
       </p>
       <pre>
         p       assumption; [@p]
         ~ ~ p   by nni @p
       </pre>
       <p>
-        to obtain a new proof β where <code>β : proof (p |- ~ ~ p)</code>. We no longer need the assumption that the reference <code>@p</code> exists in the context &mdash; β will be a well-formed proof regardless of that.
+        to obtain a new proof β where <code>β : proof (p |- ~ ~ p)</code>. We no longer need to assume that there is a reference <code>@p</code> &mdash; β will be a well-formed proof regardless of that.
       </p>
       
       <h3><a name="boxes" href="#boxes">Boxes</a></h3>
@@ -841,7 +841,7 @@ r        by dis_e @dis #box1 #box2
         β
       </pre>
       <p>
-        The new proof <code>γ : proof (Ψ |- χ)</code> will no longer depend on a variable <code>@ref : ref (Φ |- φ)</code> to be available in the context.
+        The new proof <code>γ : proof (Ψ |- χ)</code> will no longer depend on a variable <code>@ref : ref (Φ |- φ)</code>.
       </p>
       <p>
         We illustrate chaining by two concrete examples. For the first example, let α be the proof

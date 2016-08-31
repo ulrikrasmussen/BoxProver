@@ -53,7 +53,7 @@ render l@(OpenLineProof hyps frags) = do
        "Proof contains holes and/or higher-order objects."
   let implicits = S.fromList [ x | b <- hyps, bindImplicit b, Just x <- [bindVar b] ]
   renderFrags implicits frags
-  H.h2 $ fromString "Proof context"
+  H.h2 $ fromString "Premise(s) and assumptions(s)"
   renderProofHypotheses hyps
 
 parens :: Html -> Html
@@ -125,15 +125,24 @@ renderReference implicits rule refs = do
   _ <- fromString " "
   sequence_ (intersperse (fromString ", ") $ map renderLineRef refs)
 
+flag_renderAllHypotheses :: Bool
+flag_renderAllHypotheses = False
+
 -- Render a tabular representation of the full proof context, including implicit
 -- hypotheses.
 renderProofHypotheses :: [HypBinding] -> Html
 renderProofHypotheses hyps =
-  H.table ! A.class_ "hypotheses" $ mapM_ renderHyp hyps
+  H.table ! A.class_ "hypotheses" $ mapM_ renderHyp $ filter isVisible hyps
   where
+    isVisible (HypBinding _ implicit typ) =
+      or [flag_renderAllHypotheses
+         ,implicit
+         ,isJudgment typ
+         ]
+    
     renderHyp (HypBinding mx implicit typ) = H.tr $ do
-      H.td $ (if implicit then holeSpan else id) $ fromString $ maybe "_" id mx
-      H.td $ " : "
+      H.td $ (if implicit then holeSpan else id) $ fromString $ maybe "" id mx
+      H.td $ maybe "" (const " : ") mx
       H.td $ renderObjType typ
     renderObjType :: ObjType -> Html
     renderObjType (TermTy c@(Open hyps' TermConst))
@@ -150,7 +159,7 @@ renderProofHypotheses hyps =
         | otherwise = renderContextual (const (metaKindSpan "Proposition")) c
     renderObjType (RefTy c) =
         renderContextual
-          (\(RefType bt) -> metaKindSpan "Ref to " >> (renderSequent bt))
+          (\(RefType bt) -> {-metaKindSpan "Ref to " >>-} (renderSequent bt))
           c
     renderObjType (SequentTy c) =
         renderContextual (const (metaKindSpan "Sequent")) c
@@ -161,7 +170,7 @@ renderProofHypotheses hyps =
     renderContextual f (Open [] a) = f a
     renderContextual f (Open bindings a) = do
       f a
-      H.div ! A.class_ "context-separator" $ "with context"
+      H.div ! A.class_ "context-separator" $ "with premise(s) and assumption(s)"
       H.div ! A.class_ "context" $ renderProofHypotheses bindings
 
 type Precedence = Int
@@ -309,10 +318,13 @@ renderOpen f (Open hyps a) =
         parens (renderOpen renderSequent (Open hs sq)) >> fromString " "
       -- Remaining cases should not happen
       _ -> return ()
-      
 
-    isSubject (PropTy _)    = True
-    isSubject (TermTy _)    = True
-    isSubject (SequentTy _) = True
-    isSubject _             = False
-    isJudgment = not . isSubject
+isSubject :: ObjType -> Bool
+isSubject (PropTy _)    = True
+isSubject (TermTy _)    = True
+isSubject (SequentTy _) = True
+isSubject (RefTy _)     = False
+isSubject (ProofTy _)   = False
+
+isJudgment :: ObjType -> Bool
+isJudgment = not . isSubject
