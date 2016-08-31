@@ -23,7 +23,7 @@ renderLinearProof :: Sequent -> [ProofFragment] -> Either String Text
 renderLinearProof seq' frags = do
   seqT <- renderSequent seq'
   fragsT <- lst <$> mapM renderFragment frags
-  return $ ctor "Proof" [seqT, fragsT]
+  return $ ctor "" ["boxproof", seqT, fragsT]
 
 renderSequent :: Sequent -> Either String Text
 renderSequent (Sequent ant con) = do
@@ -31,7 +31,7 @@ renderSequent (Sequent ant con) = do
   conFormula <- either (const $ Left "Cannot export sequent with hole in it") Right con
   antT <- lst <$> mapM renderFormula antFormulas
   conT <- renderFormula conFormula
-  return $ ctor "Sequent" [antT, conT]
+  return $ ctor "" [antT, conT]
 
 renderFragment :: ProofFragment -> Either String Text
 renderFragment (Line i (Sequent _ con) ruleName refs) = do
