@@ -301,7 +301,6 @@
             content.find("div.context-separator").each(function(i,sep) {
                 var ctx = $(sep).next();
                 $(sep).append('&nbsp;<i class="el el-caret-down"></i>');
-                ctx.addClass("collapse");
                 $(sep).click((function(theSep, theCtx) {
                     return function() {
                         theCtx.toggleClass("collapse");
