@@ -37,7 +37,7 @@ extractDecl twelfServer fitchPath declString = do
     Left err -> error $ show err
     Right (d, _) -> withTwelfServer twelfServer False $ do
       _ <- reconstruct ds
-      [(_, DDefn n a m)] <- M.toList <$> extract [d]
+      ~[(_, DDefn n a m)] <- M.toList <$> extract [d]
       return (n, a, m)
 
 isDefn :: AST.Decl -> Bool

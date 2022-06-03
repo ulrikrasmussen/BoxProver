@@ -20,7 +20,7 @@ executable boxprover
   -- other-modules:       
   -- other-extensions:    
   build-depends:       aeson >= 0.9
-                     , base >=4.8 && <4.9
+                     , base >=4.8
                      , blaze-html >= 0.8
                      , blaze-markup >= 0.7
                      , bytestring >= 0.10
@@ -28,7 +28,7 @@ executable boxprover
                      , exceptions >= 0.8
                      , mtl >= 2.2
                      , snap-core >= 0.9
-                     , snap-server >= 0.9
+                     , snap-server
                      , temporary >= 1.2
                      , text >= 1.2
                      , twelfparser >= 0.1
