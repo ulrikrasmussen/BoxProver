@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM debian:stretch AS builder
 
 ## ensure locale is set during build
 ENV LANG C.UTF-8
@@ -29,10 +29,17 @@ RUN stack install --only-dependencies --no-interleaved-output
 COPY LICENSE /opt/boxprover/
 COPY src /opt/boxprover/src
 RUN stack install --no-interleaved-output
+RUN /bin/bash -c "cp $(stack path --local-install-root)/bin/boxprover ."
 
+FROM debian:stretch
+
+RUN apt-get update
+RUN apt-get install libgmp10
+RUN mkdir -p /opt/boxprover
+COPY --from=builder /opt/boxprover/boxprover /opt/boxprover/boxprover
 COPY twelf-server /opt/boxprover/twelf-server
 COPY data /opt/boxprover/data
 COPY frontend /opt/boxprover/frontend
 COPY start.sh /opt/boxprover/start.sh
-
+WORKDIR /opt/boxprover
 ENTRYPOINT ["./start.sh"]
