@@ -33,6 +33,7 @@
                      top: hpos });
         hsplitter.css({ top: hpos - splitSize,
                         height: splitSize });
+        aceEditor.resize();
     }
 
     function setInitialLayout() {
