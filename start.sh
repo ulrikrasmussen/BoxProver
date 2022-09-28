@@ -1,5 +1,6 @@
 #!/bin/bash
 server_url=${1:-http://localhost:8000}
+mkdir -p /opt/boxprover/log
 echo "var SERVER_URL = '$server_url'" > /opt/boxprover/frontend/config.js
 /opt/boxprover/boxprover \
       --twelf-server=/opt/boxprover/twelf-server \
