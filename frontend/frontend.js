@@ -11,34 +11,37 @@
     var prooftableData;
     var errorMarkers = [];
 
-    var hpos; // Position of horizontal splitter
-    var vpos; // Position of vertical splitter
+    var hpos; // position of horizontal splitter (as a fraction of whole window)
+    var vpos; // position of vertical splitter (as a fraction of whole window)
 
     function playSound(sound) {
         var audio = new Audio(sound);
         audio.play();
     }
-    
+
     function updateLayout() {
+        var splitSize = 6;
         var w = main.width();
         var h = main.height();
-        var splitSize = 6;
-        left.width(vpos - splitSize);
-        prooftable.css({ left: vpos,
-                         width: w - vpos });
-        vsplitter.css({ left: vpos - splitSize,
+        var prooftableLeft  = w * vpos;
+        var prooftableWidth = w - prooftableLeft;
+        var editorHeight = h * hpos
+        left.width(prooftableLeft - splitSize);
+        prooftable.css({ left: prooftableLeft,
+                         width: prooftableWidth});
+        vsplitter.css({ left: prooftableLeft - splitSize,
                         width: splitSize });
-        editor.css({ height: hpos - splitSize });
-        output.css({ height: h - hpos,
-                     top: hpos });
-        hsplitter.css({ top: hpos - splitSize,
+        editor.css({ height: editorHeight - splitSize });
+        output.css({ height: h - editorHeight,
+                     top: editorHeight });
+        hsplitter.css({ top: editorHeight - splitSize,
                         height: splitSize });
-        aceEditor.resize();
+        aceEditor.resize()
     }
 
     function setInitialLayout() {
-        vpos = main.width() / 2;
-        hpos = main.height() - main.height() / 5;
+        vpos = .5;
+        hpos = .8;
     }
 
     var resizeTimer;
@@ -47,6 +50,13 @@
         resizeTimer = setTimeout(updateLayout, 100);
     }
 
+    const minFrac = .01;
+    const maxFrac = 1 - minFrac;
+    function normalizeFrac(frac) {
+        if (frac < minFrac) return minFrac;
+        if (frac > maxFrac) return maxFrac;
+        return frac;
+    }
     function onVSplitterMouseDownHandler() {
         function hideVWindows() {
             left.hide();
@@ -55,16 +65,38 @@
         function showVWindows() {
             left.show();
             prooftable.show();
-        }        
+        }
         hideVWindows();
+        var w = main.width();
         $(window).mousemove(function(event) {
-            vpos = event.pageX - main.position().left;
+            vpos = normalizeFrac((event.pageX - main.position().left) / w);
             updateLayout();
         });
         $(window).mouseup(function() {
             $(window).unbind('mouseup');
             $(window).unbind('mousemove');
             showVWindows();
+        });
+    }
+    function onHSplitterMouseDownHandler() {
+        function hideHWindows() {
+            output.hide();
+            prooftable.hide();
+        }
+        function showHWindows() {
+            output.show();
+            prooftable.show();
+        }
+        hideHWindows();
+        var h = main.height();
+        $(window).mousemove(function(event) {
+            hpos =  normalizeFrac((event.pageY - main.position().top) / h);
+            updateLayout();
+        });
+        $(window).mouseup(function() {
+            $(window).unbind('mouseup');
+            $(window).unbind('mousemove');
+            showHWindows();
         });
     }
 
@@ -154,7 +186,7 @@
             }
         };
     }
-    
+
     function onCheckClickHandler() {
         checkProof();
     }
@@ -188,28 +220,6 @@
         var theme = theme || optionalLocalStorageGetItem('theme') || 'ace/theme/chrome';
         aceEditor.setTheme(theme);
         optionalLocalStorageSetItem('theme', theme);
-    }
-    
-    function onHSplitterMouseDownHandler() {
-        function hideHWindows() {
-            output.hide();
-            prooftable.hide();
-        }        
-        function showHWindows() {
-            output.show();
-            prooftable.show();
-        }
-
-        hideHWindows();
-        $(window).mousemove(function(event) {
-            hpos = event.pageY - main.position().top;
-            updateLayout();
-        });
-        $(window).mouseup(function() {
-            $(window).unbind('mouseup');
-            $(window).unbind('mousemove');
-            showHWindows();
-        });
     }
 
     var checkRequest = null;
@@ -263,7 +273,7 @@
         });
         errorMarkers = [];
     }
-    
+
     function handleCheckResponse(response) {
         prooftableData = response;
         output.html('<pre><samp>' + response.output + '</samp></pre>');
@@ -310,7 +320,7 @@
                     }
                 })($(sep),ctx));
             });
-            
+
             activeTabName = activeTabName || table.name;
             if (table.name === activeTabName) {
                 tab.addClass("active");
@@ -320,7 +330,7 @@
                 tab.addClass("inactive");
                 content.addClass("hide");
             }
-            
+
             tab.click((function(theTab, theContent, theName) {
                 return function() {
                     $("#tabButtons li.active").addClass("inactive").removeClass("active");
@@ -330,14 +340,14 @@
                     activeTabName = theName;
                 };
             })(tab, content, table.name));
-            
+
             tabsList.append(tab);
             contentDivs.append(content);
         });
         prooftable.append(tabsList);
         prooftable.append(contentDivs);
     }
-    
+
     function optionalLocalStorageGetItem(key) {
         try {
             return localStorage.getItem(key);
@@ -376,7 +386,7 @@
                 .appendTo(themeSelect);
         });
     }
-    
+
     $().ready(function() {
         main         = $("#main");
         editor       = $("#editor");
@@ -394,7 +404,7 @@
         printButton  = $("#print");
         enhanceCheckBox = $("#enhance");
         themeSelect  = $("#theme");
-        
+
         aceEditor = ace.edit("editor");
         //aceEditor.setTheme("ace/theme/chrome");
         setTheme();
@@ -440,7 +450,7 @@
         var enhance = optionalLocalStorageGetItem("enhance");
         if (enhance == "true")
             enhanceCheckBox.prop('checked', true);
-        
+
         aceEditor.getSession().on("change", function() {
             var proof = aceEditor.getSession().getValue();
             optionalLocalStorageSetItem("proof", proof);
