@@ -1,0 +1,13 @@
+[Unit]
+Description=BoxProver
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecStart=/usr/bin/docker run --rm --name %n -p 127.0.0.1:8000:8000 --ulimit nofile=1024:104875 -v /var/log/boxprover:/opt/boxprover/log ulrikrasmussen/boxprover https://boxprover.utr.dk
+ExecStop=/usr/bin/docker kill %n
+
+[Install]
+WantedBy=multi-user.target
