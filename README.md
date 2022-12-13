@@ -17,7 +17,7 @@ Build it using the command
 
 Run the image in a container using
 
-    docker run --rm -it ulrikrasmussen/boxprover --ulimit nofile=1024:104875 -p 8000:8000 [public-url]
+    docker run --rm -it --ulimit nofile=1024:104875 -p 8000:8000 ulrikrasmussen/boxprover [public-url]
 
 where `public-url` is an optional argument that specifies the public URL that the application will be accessed at.
 It defaults to `http://localhost:8000`.
