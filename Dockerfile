@@ -1,4 +1,4 @@
-FROM debian:stretch AS builder
+FROM debian:bullseye AS builder
 
 ## ensure locale is set during build
 ENV LANG C.UTF-8
@@ -31,7 +31,7 @@ COPY src /opt/boxprover/src
 RUN stack install --no-interleaved-output
 RUN /bin/bash -c "cp $(stack path --local-install-root)/bin/boxprover ."
 
-FROM debian:stretch
+FROM debian:bullseye
 
 RUN apt-get update
 RUN apt-get install libgmp10
