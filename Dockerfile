@@ -11,7 +11,7 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends zlib1g-dev libtinfo-dev libsqlite3-dev \
     g++ netbase xz-utils libgmp-dev make
 
-ENV STACK_VERSION=2.7.5
+ENV STACK_VERSION=3.11.1
 RUN curl -fSL https://github.com/commercialhaskell/stack/releases/download/v${STACK_VERSION}/stack-${STACK_VERSION}-linux-x86_64.tar.gz -o stack.tar.gz
 RUN tar -xf stack.tar.gz -C /usr/local/bin --strip-components=1
 
@@ -33,8 +33,11 @@ RUN /bin/bash -c "cp $(stack path --local-install-root)/bin/boxprover ."
 
 FROM debian:bullseye
 
+## links the published package to this repository on GitHub Container Registry
+LABEL org.opencontainers.image.source=https://github.com/ulrikrasmussen/BoxProver
+
 RUN apt-get update
-RUN apt-get install libgmp10
+RUN apt-get install -y --no-install-recommends libgmp10
 RUN mkdir -p /opt/boxprover
 COPY --from=builder /opt/boxprover/boxprover /opt/boxprover/boxprover
 COPY twelf-server /opt/boxprover/twelf-server

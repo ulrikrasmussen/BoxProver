@@ -1,0 +1,5 @@
+.git
+**/.git
+.stack-work
+log/
+frontend/config.js
