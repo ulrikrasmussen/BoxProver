@@ -1,3 +1,18 @@
+# Getting the source
+
+The frontend embeds the [Ace](https://ace.c9.io/) editor as a git submodule, so clone with
+
+    git clone --recursive git@github.com:ulrikrasmussen/BoxProver.git
+
+or, if you already cloned without `--recursive`,
+
+    git submodule update --init --recursive
+
+The Docker image is built from the working tree rather than from a git checkout, so if
+the submodule is missing the image still builds, but the frontend it serves cannot load
+its editor.
+
+
 # Building with Stack
 
 To build locally, you first need to install Stack.
@@ -25,3 +40,25 @@ It defaults to `http://localhost:8000`.
 When the container is running, the application can be accessed in a browser by navigating to http://localhost:8000.
 
 **Note**: The `--ulimit` argument is needed to work around a performance issue due to the default maximum number of file descriptors being quite high in Docker containers and inefficiencies in the implementation of [createProcess](https://hackage.haskell.org/package/process-1.6.10.0/docs/System-Process.html#v:createProcess) with `close_fds=True`.
+
+
+# Running a pre-built image
+
+Pre-built images are published to the GitHub Container Registry, which saves building
+GHC and the Haskell dependencies locally:
+
+    docker run --rm -it --ulimit nofile=1024:104875 -p 8000:8000 \
+        ghcr.io/ulrikrasmussen/boxprover [public-url]
+
+
+# Releasing
+
+Pushing a tag that starts with `v` builds the image and publishes it to
+`ghcr.io/ulrikrasmussen/boxprover`, tagged both with the name of the tag and with
+`latest`:
+
+    git tag v0.1.0.0
+    git push origin v0.1.0.0
+
+See `.github/workflows/publish.yml`. The workflow can also be run manually from the
+Actions tab, in which case it publishes `latest` only.
